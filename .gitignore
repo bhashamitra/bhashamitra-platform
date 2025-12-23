@@ -1,0 +1,14 @@
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Build outputs (future-proof)
+target/
+build/
+out/
