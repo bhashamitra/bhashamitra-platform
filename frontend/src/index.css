@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+:root {
+    /* Warriors color palette */
+    --warriors-blue: #1d428a;
+    --warriors-gold: #ffc72c;
+
+    /* Neutral background */
+    --page-bg: #ffffff;
+    --text-main: #0f172a; /* slate-900 */
+}
