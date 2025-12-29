@@ -33,7 +33,7 @@ by all implementations:
 
 ### 1. Words (Lemmas)
 - Canonical dictionary form of a word in its native script
-- Each lemma represents a single conceptual entry
+- Each lemma represents a single conceptual word entry and serves as the primary anchor for meanings, usage sentences, surface forms, and pronunciation.
 
 ### 2. Surface Forms
 - Inflected or conjugated forms of a lemma
@@ -53,7 +53,8 @@ by all implementations:
 ### 5. Pronunciation
 - Audio pronunciation for lemmas
 - Multiple pronunciations may exist (speaker, region)
-
+- Pronunciation focuses on natural, neutral usage and does not aim to catalog
+  all dialectal or phonetic variations.
 ---
 
 ## Explicitly Excluded from the Language Core

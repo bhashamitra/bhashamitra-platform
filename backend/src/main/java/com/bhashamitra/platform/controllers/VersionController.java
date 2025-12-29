@@ -10,8 +10,8 @@ public class VersionController {
     @GetMapping("/api/version")
     public Map<String, Object> version() {
         return Map.of(
-                "app", "bhashamitra-platform",
-                "status", "ok"
+                "name", "bhashamitra platform",
+                "version", "1.0.0"
         );
     }
 }
