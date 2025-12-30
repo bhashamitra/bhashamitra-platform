@@ -141,3 +141,49 @@ output "ecr_repository_arn" {
   description = "ARN of the ECR repository"
   value       = data.aws_ecr_repository.bhashamitra_platform.arn
 }
+
+# Cognito outputs
+output "cognito_user_pool_id" {
+  description = "ID of the Cognito User Pool"
+  value       = aws_cognito_user_pool.bhashamitra.id
+}
+
+output "cognito_user_pool_arn" {
+  description = "ARN of the Cognito User Pool"
+  value       = aws_cognito_user_pool.bhashamitra.arn
+}
+
+output "cognito_app_client_id" {
+  description = "ID of the Cognito App Client"
+  value       = aws_cognito_user_pool_client.bhashamitra_app.id
+}
+
+output "cognito_user_groups" {
+  description = "Cognito User Pool Groups"
+  value = {
+    learner = aws_cognito_user_group.learner.name
+    editor  = aws_cognito_user_group.editor.name
+    admin   = aws_cognito_user_group.admin.name
+  }
+}
+
+output "cognito_custom_domain" {
+  description = "Cognito custom domain for Hosted UI"
+  value       = aws_cognito_user_pool_domain.bhashamitra_auth.domain
+}
+
+output "cognito_hosted_ui_url" {
+  description = "Cognito Hosted UI URL"
+  value       = "https://${aws_cognito_user_pool_domain.bhashamitra_auth.domain}"
+}
+
+# Quality-of-life outputs for backend integration
+output "cognito_auth_domain" {
+  description = "Full Cognito auth domain URL for backend configuration"
+  value       = "https://${aws_cognito_user_pool_domain.bhashamitra_auth.domain}"
+}
+
+output "cognito_client_id" {
+  description = "Cognito App Client ID for backend configuration"
+  value       = aws_cognito_user_pool_client.bhashamitra_app.id
+}

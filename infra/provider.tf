@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.67"
+      version = "~> 6.0"
     }
   }
 
@@ -19,4 +19,10 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+}
+
+# Additional provider for us-east-1 (required for Cognito custom domain certificates)
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
 }
