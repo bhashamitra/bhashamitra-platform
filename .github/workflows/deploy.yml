@@ -1,0 +1,99 @@
+name: Deploy to ECS Fargate
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      image_tag:
+        description: 'Docker image tag (default: commit SHA)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-west-1
+  ECR_REPOSITORY: bhashamitra-platform
+  ECS_CLUSTER: bhashamitra-cluster
+  ECS_SERVICE: bhashamitra-service
+  CONTAINER_NAME: bhashamitra-app
+
+jobs:
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read    # Required to checkout code
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Set image tag
+        id: image-tag
+        run: |
+          set -euo pipefail
+          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker buildx build \
+            --platform linux/amd64 \
+            --tag "$IMAGE_URI" \
+            --push \
+            .
+          echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
+      
+      - name: Update task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs/taskdef.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+      
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+      
+      - name: Verify deployment
+        run: |
+          set -euo pipefail
+          echo "🎉 Deployment completed successfully!"
+          echo "Application URL: https://bhashamitra.com/"
+          echo "Image deployed: ${{ steps.build-image.outputs.image }}"
+          
+          # Wait a moment for health checks
+          sleep 30
+          
+          # Check service status
+          aws ecs describe-services \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount}'

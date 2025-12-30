@@ -68,7 +68,7 @@ resource "aws_lb" "bhashamitra" {
 # Target Group for ECS Service
 resource "aws_lb_target_group" "bhashamitra_v2" {
   name        = "bhashamitra-tg-v2"
-  port        = 80
+  port        = 8080
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.mvl_vpc.id
   target_type = "ip"
@@ -78,7 +78,7 @@ resource "aws_lb_target_group" "bhashamitra_v2" {
     healthy_threshold   = 2
     interval            = 30
     matcher             = "200"
-    path                = "/"
+    path                = "/actuator/health/liveness"
     port                = "traffic-port"
     protocol            = "HTTP"
     timeout             = 5

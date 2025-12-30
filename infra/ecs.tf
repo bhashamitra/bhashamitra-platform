@@ -126,7 +126,7 @@ resource "aws_ecs_task_definition" "bhashamitra" {
       
       portMappings = [
         {
-          containerPort = 80  # Apache default port
+          containerPort = 8080  # Spring Boot default port
           protocol      = "tcp"
         }
       ]
@@ -203,7 +203,7 @@ resource "aws_ecs_service" "bhashamitra" {
   load_balancer {
     target_group_arn = aws_lb_target_group.bhashamitra_v2.arn
     container_name   = "bhashamitra-app"
-    container_port   = 80
+    container_port   = 8080
   }
 
   # Health check grace period

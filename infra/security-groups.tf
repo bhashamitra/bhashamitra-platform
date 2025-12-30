@@ -65,22 +65,22 @@ resource "aws_security_group_rule" "alb_http_ingress" {
 # ALB egress to ECS
 resource "aws_security_group_rule" "alb_to_ecs_egress" {
   type                     = "egress"
-  from_port                = 80
-  to_port                  = 80
+  from_port                = 8080
+  to_port                  = 8080
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.bhashamitra_ecs.id
-  description              = "HTTP to ECS tasks"
+  description              = "HTTP to ECS tasks on port 8080"
   security_group_id        = aws_security_group.bhashamitra_alb.id
 }
 
 # ECS ingress from ALB
 resource "aws_security_group_rule" "ecs_from_alb_ingress" {
   type                     = "ingress"
-  from_port                = 80
-  to_port                  = 80
+  from_port                = 8080
+  to_port                  = 8080
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.bhashamitra_alb.id
-  description              = "HTTP from ALB"
+  description              = "HTTP from ALB on port 8080"
   security_group_id        = aws_security_group.bhashamitra_ecs.id
 }
 

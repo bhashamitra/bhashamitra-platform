@@ -1,0 +1,58 @@
+{
+  "family": "bhashamitra",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::239408179735:role/bhashamitra-ecs-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::239408179735:role/bhashamitra-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "bhashamitra-app",
+      "image": "PLACEHOLDER_IMAGE_URI",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:host::"
+        },
+        {
+          "name": "DB_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:port::"
+        },
+        {
+          "name": "DB_NAME",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:dbname::"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:username::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:password::"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/bhashamitra",
+          "awslogs-region": "us-west-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}
