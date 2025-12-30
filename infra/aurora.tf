@@ -30,6 +30,34 @@ resource "aws_secretsmanager_secret_version" "bhashamitra_app_credentials" {
   })
 }
 
+# DB cluster parameter group for UTF-8 character set and collation
+resource "aws_rds_cluster_parameter_group" "bhashamitra_aurora" {
+  family      = "aurora-mysql8.0"
+  name        = "bhashamitra-aurora-params"
+  description = "Aurora cluster parameter group for Bhashamitra with UTF-8 support"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8mb4"
+  }
+
+  parameter {
+    name  = "collation_server"
+    value = "utf8mb4_0900_ai_ci"
+  }
+
+  parameter {
+    name  = "character_set_database"
+    value = "utf8mb4"
+  }
+
+  tags = {
+    Name        = "bhashamitra-aurora-parameter-group"
+    Project     = "Bhashamitra"
+    Environment = "production"
+  }
+}
+
 # DB subnet group for Aurora (requires subnets in multiple AZs)
 resource "aws_db_subnet_group" "bhashamitra_aurora" {
   name       = "bhashamitra-aurora-subnet-group"
@@ -51,11 +79,14 @@ resource "aws_rds_cluster" "bhashamitra_aurora" {
   engine                 = "aurora-mysql"
   engine_version         = null  # Use latest available version
   database_name          = "bhashamitra"
-  master_username        = "bmadmin"
+  master_username        = "bmladmin"
   
   # Use AWS Secrets Manager for password management
   manage_master_user_password = true
   master_user_secret_kms_key_id = null  # Use default KMS key
+  
+  # Character set and collation for Indian languages
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.bhashamitra_aurora.name
   
   # Serverless v2 configuration
   engine_mode    = "provisioned"

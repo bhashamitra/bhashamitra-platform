@@ -245,6 +245,50 @@ GitHub Actions CI/CD:
 
 ---
 
+## Local Development
+
+### Prerequisites
+
+- **Java 21** (OpenJDK or Oracle JDK)
+- **Maven 3.9+** for building the backend
+- **Node.js 20+** and **npm** for frontend development
+- **MySQL 8.0+** for local database
+
+### Database Setup
+
+1. **Install MySQL 8.0+** locally
+
+2. **Create the database and user:**
+   ```sql
+   CREATE DATABASE bhashamitra CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+   CREATE USER 'bhashamitra'@'localhost' IDENTIFIED BY 'bhashamitra';
+   GRANT ALL PRIVILEGES ON bhashamitra.* TO 'bhashamitra'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+
+3. **Configure local profile:** Create `application-local.yml` with your local database connection settings
+
+### Running Locally
+
+```bash
+# Backend (with local profile)
+cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+# Frontend development (optional)
+cd frontend && npm install && npm run dev
+
+# Access points
+# - Full app: http://localhost:8080/
+# - Health check: http://localhost:8080/actuator/health
+# - API endpoints: http://localhost:8080/api/
+```
+
+### Database Schema
+
+The application uses **Liquibase** for database schema management with master changelog at `db/changelog/db.changelog-master.xml`. Schema changes are version-controlled and automatically applied on startup in both local and production environments.
+
+---
+
 ## Architecture (high-level)
 
 - Backend: Java (Spring Boot)
