@@ -71,21 +71,17 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
   prevent_user_existence_errors = "ENABLED"
 
   # Explicit auth flows
-  explicit_auth_flows = [
-    "ALLOW_USER_SRP_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH"
-  ]
+  explicit_auth_flows = ["ALLOW_REFRESH_TOKEN_AUTH"]
 
   # OAuth configuration for Hosted UI
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows = ["code"]
-  allowed_oauth_scopes = ["openid", "email"]
+  allowed_oauth_scopes = ["openid", "email", "profile"]
   
-  # Callback and logout URLs (we'll use these with custom domain later)
+  # Callback and logout URLs (Spring Security OAuth2 defaults)
   callback_urls = [
-    "https://bhashamitra.com/auth/callback",
-    "https://www.bhashamitra.com/auth/callback"
+    "https://bhashamitra.com/login/oauth2/code/cognito",
+    "https://www.bhashamitra.com/login/oauth2/code/cognito"
   ]
   
   logout_urls = [
@@ -95,6 +91,9 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
   
   # Identity providers
   supported_identity_providers = ["COGNITO"]
+
+  # Security hardening
+  enable_token_revocation = true
 
   # Read/write attributes
   read_attributes = [
