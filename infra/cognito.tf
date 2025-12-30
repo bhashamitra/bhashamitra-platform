@@ -192,7 +192,7 @@ resource "aws_route53_record" "cognito_auth" {
 
   alias {
     evaluate_target_health = false
-    name                   = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution_arn
+    name                   = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution
     zone_id                = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution_zone_id
   }
 }
@@ -205,7 +205,7 @@ resource "aws_route53_record" "cognito_auth_aaaa" {
 
   alias {
     evaluate_target_health = false
-    name                   = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution_arn
+    name                   = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution
     zone_id                = aws_cognito_user_pool_domain.bhashamitra_auth.cloudfront_distribution_zone_id
   }
 }
