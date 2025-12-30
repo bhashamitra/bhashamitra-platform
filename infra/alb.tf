@@ -66,8 +66,8 @@ resource "aws_lb" "bhashamitra" {
 }
 
 # Target Group for ECS Service
-resource "aws_lb_target_group" "bhashamitra_v2" {
-  name        = "bhashamitra-tg-v2"
+resource "aws_lb_target_group" "bhashamitra_v3" {
+  name        = "bhashamitra-tg-v3"
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.mvl_vpc.id
@@ -78,7 +78,7 @@ resource "aws_lb_target_group" "bhashamitra_v2" {
     healthy_threshold   = 2
     interval            = 30
     matcher             = "200"
-    path                = "/actuator/health/liveness"
+    path                = "/actuator/health/readiness"
     port                = "traffic-port"
     protocol            = "HTTP"
     timeout             = 5
@@ -86,7 +86,7 @@ resource "aws_lb_target_group" "bhashamitra_v2" {
   }
 
   tags = {
-    Name        = "bhashamitra-target-group-v2"
+    Name        = "bhashamitra-target-group-v3"
     Project     = "Bhashamitra"
     Environment = "production"
   }
@@ -103,8 +103,11 @@ resource "aws_lb_listener" "bhashamitra_https" {
   # Default action for bhashamitra.com - serve the app
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.bhashamitra_v2.arn
+    target_group_arn = aws_lb_target_group.bhashamitra_v3.arn
   }
+
+  # Ensure target group is created first
+  depends_on = [aws_lb_target_group.bhashamitra_v3]
 
   tags = {
     Name        = "bhashamitra-https-listener"

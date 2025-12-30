@@ -82,7 +82,9 @@ The BhashaMitra platform is deployed on AWS using a modern, scalable architectur
 - **ECS Fargate Cluster**: Serverless container orchestration
 - **Task Definition**: 0.25 vCPU, 512MB memory configuration
 - **Auto Scaling**: Based on CPU and memory utilization
-- **Health Checks**: Spring Boot Actuator liveness endpoint (`/actuator/health/liveness`)
+- **Health Checks**: Dual-layer monitoring
+  - Container Health: Spring Boot Actuator liveness endpoint (`/actuator/health/liveness`)
+  - Load Balancer Health: Spring Boot Actuator readiness endpoint (`/actuator/health/readiness`)
 
 **Load Balancing & SSL:**
 - **Application Load Balancer**: Multi-AZ across public subnets
@@ -98,8 +100,9 @@ The BhashaMitra platform is deployed on AWS using a modern, scalable architectur
 
 **CI/CD & Deployment:**
 - **GitHub Actions OIDC**: Secure authentication without access keys
-- **ECR Integration**: Container image storage and deployment
+- **ECR Integration**: Container image storage with immutable tags
 - **Automated Deployments**: Push to ECR → Update ECS service
+- **Task Definition Management**: Committed task definition file (`ecs/taskdef.json`) for deterministic deployments
 
 **Monitoring & Logging:**
 - **CloudWatch Logs**: ECS task and application logging
@@ -155,11 +158,11 @@ All infrastructure is managed using **Terraform** with:
 │  │  │  │                             │││  │  │                                 │││
 │  │  │  │ ┌─────────────────────────┐ │││  │  │                                 │││
 │  │  │  │ │    Spring Boot App      │ │││  │  │                                 │││
-│  │  │  │ │   (nginx placeholder)   │ │││  │  │                                 │││
-│  │  │  │ │      Port 80            │ │││  │  │                                 │││
+│  │  │  │ │      Port 8080          │ │││  │  │                                 │││
 │  │  │  │ │                         │ │││  │  │                                 │││
-│  │  │  │ │   Health: /actuator/    │ │││  │  │                                 │││
-│  │  │  │ │   health/liveness       │ │││  │  │                                 │││
+│  │  │  │ │   Container Health:     │ │││  │  │                                 │││
+│  │  │  │ │   /actuator/health/     │ │││  │  │                                 │││
+│  │  │  │ │   liveness              │ │││  │  │                                 │││
 │  │  │  │ └─────────────────────────┘ │││  │  │                                 │││
 │  │  │  └─────────────────────────────┘││  │  │                                 │││
 │  │  └─────────────────────────────────┘│  │  └─────────────────────────────────┘││
@@ -202,11 +205,11 @@ Security Groups:
 │ Group           │    │ Group           │    │ Group           │
 │                 │    │                 │    │                 │
 │ Inbound:        │    │ Inbound:        │    │ Inbound:        │
-│ • 80 (Internet) │───▶│ • 80 (from ALB) │───▶│ • 3306 (from    │
-│ • 443(Internet) │    │                 │    │   ECS only)     │
+│ • 80 (Internet) │───▶│ • 8080(from ALB)│───▶│ • 3306 (from    │
+│ • 8080(Internet) │    │                 │    │   ECS only)     │
 │                 │    │ Outbound:       │    │                 │
 │ Outbound:       │    │ • All (Internet)│    │ Outbound:       │
-│ • 80 (to ECS)   │    │                 │    │ • None          │
+│ • 8080 (to ECS) │    │                 │    │ • None          │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 
 GitHub Actions CI/CD:

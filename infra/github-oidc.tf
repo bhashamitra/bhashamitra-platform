@@ -105,7 +105,10 @@ resource "aws_iam_policy" "ecs_permissions" {
         Action = [
           "iam:PassRole"
         ]
-        Resource = "arn:aws:iam::*:role/ecs-*"
+        Resource = [
+          "arn:aws:iam::*:role/bhashamitra-ecs-task-execution-role",
+          "arn:aws:iam::*:role/bhashamitra-ecs-task-role"
+        ]
       }
     ]
   })

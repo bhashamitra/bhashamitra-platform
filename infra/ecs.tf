@@ -122,7 +122,7 @@ resource "aws_ecs_task_definition" "bhashamitra" {
   container_definitions = jsonencode([
     {
       name  = "bhashamitra-app"
-      image = "nginx:latest"  # nginx has curl and serves on port 80
+      image = "nginx:latest"  # This will be replaced by GitHub Actions
       
       portMappings = [
         {
@@ -130,6 +130,18 @@ resource "aws_ecs_task_definition" "bhashamitra" {
           protocol      = "tcp"
         }
       ]
+
+      # Container health check (separate from ALB health check)
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/actuator/health/liveness || exit 1"
+        ]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
 
       # Environment variables from Secrets Manager
       secrets = [
@@ -173,7 +185,6 @@ resource "aws_ecs_task_definition" "bhashamitra" {
         }
       }
 
-      # Remove container health check - let ALB handle it
       essential = true
     }
   ])
@@ -201,7 +212,7 @@ resource "aws_ecs_service" "bhashamitra" {
 
   # Load balancer configuration
   load_balancer {
-    target_group_arn = aws_lb_target_group.bhashamitra_v2.arn
+    target_group_arn = aws_lb_target_group.bhashamitra_v3.arn
     container_name   = "bhashamitra-app"
     container_port   = 8080
   }
