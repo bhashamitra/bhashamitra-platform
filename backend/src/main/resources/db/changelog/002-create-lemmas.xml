@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="002-create-lemmas">
+
+        <createTable tableName="lemmas">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- ISO 639-1: mr, hi, gu, ta -->
+            <column name="language" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Canonical lemma in native script -->
+            <column name="lemma_native" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Canonical transliteration (your chosen scheme) -->
+            <column name="lemma_latin" type="VARCHAR(255)"/>
+
+            <column name="pos" type="VARCHAR(50)"/>
+
+            <column name="notes" type="TEXT"/>
+
+            <!-- DRAFT | REVIEW | PUBLISHED -->
+            <column name="status" type="VARCHAR(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Optional but recommended: enforce supported languages -->
+        <addForeignKeyConstraint
+                baseTableName="lemmas"
+                baseColumnNames="language"
+                referencedTableName="languages"
+                referencedColumnNames="code"
+                constraintName="fk_lemmas_language"
+                onDelete="RESTRICT"/>
+
+        <!-- Prevent duplicates per language -->
+        <addUniqueConstraint
+                tableName="lemmas"
+                columnNames="language, lemma_native"
+                constraintName="uk_lemmas_language_lemma_native"/>
+
+        <!-- Search helpers -->
+        <createIndex tableName="lemmas" indexName="idx_lemmas_language">
+            <column name="language"/>
+        </createIndex>
+
+        <createIndex tableName="lemmas" indexName="idx_lemmas_language_native">
+            <column name="language"/>
+            <column name="lemma_native"/>
+        </createIndex>
+
+        <createIndex tableName="lemmas" indexName="idx_lemmas_language_latin">
+            <column name="language"/>
+            <column name="lemma_latin"/>
+        </createIndex>
+
+        <createIndex tableName="lemmas" indexName="idx_lemmas_status">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="lemmas"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

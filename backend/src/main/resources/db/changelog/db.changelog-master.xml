@@ -5,5 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <include file="db/changelog/001-create-lemmas.xml"/>
+    <include file="db/changelog/001-create-languages.xml"/>
+    <include file="db/changelog/002-create-lemmas.xml"/>
+    <include file="db/changelog/003-create-meanings.xml"/>
+    <include file="db/changelog/004-create-surface-forms.xml"/>
+    <include file="db/changelog/005-create-usage-sentences.xml"/>
+    <include file="db/changelog/006-create-lemma-sentence-links.xml"/>
+    <include file="db/changelog/007-create-pronunciations.xml"/>
+
 </databaseChangeLog>

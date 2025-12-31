@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="007-create-pronunciations">
+
+        <createTable tableName="pronunciations">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="owner_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="owner_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="speaker" type="VARCHAR(100)"/>
+            <column name="region" type="VARCHAR(100)"/>
+
+            <column name="audio_uri" type="VARCHAR(1024)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="duration_ms" type="INT"/>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="pronunciations" indexName="idx_pron_owner">
+            <column name="owner_type"/>
+            <column name="owner_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="pronunciations"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="003-create-meanings">
+
+        <createTable tableName="meanings">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="lemma_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Language of meaning: en, hi, etc. -->
+            <column name="meaning_language" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="meaning_text" type="VARCHAR(1024)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="priority" type="INT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="meanings"
+                baseColumnNames="lemma_id"
+                referencedTableName="lemmas"
+                referencedColumnNames="id"
+                constraintName="fk_meanings_lemma"
+                onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+                tableName="meanings"
+                columnNames="lemma_id, meaning_language, priority"
+                constraintName="uk_meanings_lemma_lang_priority"/>
+
+        <createIndex tableName="meanings" indexName="idx_meanings_lemma">
+            <column name="lemma_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="meanings"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

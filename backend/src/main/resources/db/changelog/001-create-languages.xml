@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="001-create-languages">
+
+        <createTable tableName="languages">
+            <!-- ISO 639-1 code: mr, hi, gu, ta -->
+            <column name="code" type="VARCHAR(10)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- e.g., Devanagari, Gujarati, Tamil -->
+            <column name="script" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- e.g., "learners-phonetic-v1", "iast", etc. -->
+            <column name="transliteration_scheme" type="VARCHAR(50)"/>
+
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Seed a few languages -->
+        <insert tableName="languages">
+            <column name="code" value="mr"/>
+            <column name="name" value="Marathi"/>
+            <column name="script" value="Devanagari"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="languages">
+            <column name="code" value="hi"/>
+            <column name="name" value="Hindi"/>
+            <column name="script" value="Devanagari"/>
+            <column name="enabled" valueBoolean="false"/>
+        </insert>
+
+        <insert tableName="languages">
+            <column name="code" value="gu"/>
+            <column name="name" value="Gujarati"/>
+            <column name="script" value="Gujarati"/>
+            <column name="enabled" valueBoolean="false"/>
+        </insert>
+
+        <insert tableName="languages">
+            <column name="code" value="ta"/>
+            <column name="name" value="Tamil"/>
+            <column name="script" value="Tamil"/>
+            <column name="enabled" valueBoolean="false"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="languages"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

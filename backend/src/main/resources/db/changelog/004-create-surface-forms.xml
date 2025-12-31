@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="004-create-surface-forms">
+
+        <createTable tableName="surface_forms">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="lemma_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="form_native" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="form_latin" type="VARCHAR(255)"/>
+
+            <!-- plural, oblique, informal, alt_spelling, spoken, etc. -->
+            <column name="form_type" type="VARCHAR(50)"/>
+
+            <column name="notes" type="TEXT"/>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="surface_forms"
+                baseColumnNames="lemma_id"
+                referencedTableName="lemmas"
+                referencedColumnNames="id"
+                constraintName="fk_surface_forms_lemma"
+                onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+                tableName="surface_forms"
+                columnNames="lemma_id, form_native"
+                constraintName="uk_surface_forms_lemma_form_native"/>
+
+        <createIndex tableName="surface_forms" indexName="idx_surface_forms_lemma">
+            <column name="lemma_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="surface_forms"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

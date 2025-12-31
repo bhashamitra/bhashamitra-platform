@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="005-create-usage-sentences">
+
+        <createTable tableName="usage_sentences">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="language" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="sentence_native" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="sentence_latin" type="TEXT"/>
+
+            <column name="translation" type="TEXT"/>
+
+            <!-- spoken, neutral, formal -->
+            <column name="register" type="VARCHAR(20)" defaultValue="neutral">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="explanation" type="TEXT"/>
+
+            <column name="difficulty" type="INT"/>
+
+            <column name="status" type="VARCHAR(20)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0"/>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="usage_sentences"
+                baseColumnNames="language"
+                referencedTableName="languages"
+                referencedColumnNames="code"
+                constraintName="fk_usage_sentences_language"
+                onDelete="RESTRICT"/>
+
+        <createIndex tableName="usage_sentences" indexName="idx_usage_sentences_language">
+            <column name="language"/>
+        </createIndex>
+
+        <createIndex tableName="usage_sentences" indexName="idx_usage_sentences_status">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="usage_sentences"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>
