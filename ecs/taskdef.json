@@ -52,8 +52,18 @@
         {
           "name": "SPRING_PROFILES_ACTIVE",
           "value": "production"
+        },
+        {
+          "name": "COGNITO_CLIENT_ID",
+          "value": "7cdbeojvue3dmmlks8qf3hf3gj"
+        },
+        {
+          "name": "COGNITO_USER_POOL_ID",
+          "value": "us-west-1_EAIAbURr1"
         }
       ],
+
+
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

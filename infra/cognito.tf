@@ -81,12 +81,14 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
   # Callback and logout URLs (Spring Security OAuth2 defaults)
   callback_urls = [
     "https://bhashamitra.com/login/oauth2/code/cognito",
-    "https://www.bhashamitra.com/login/oauth2/code/cognito"
+    "https://www.bhashamitra.com/login/oauth2/code/cognito",
+    "http://localhost:8080/login/oauth2/code/cognito"
   ]
-  
+
   logout_urls = [
     "https://bhashamitra.com/",
-    "https://www.bhashamitra.com/"
+    "https://www.bhashamitra.com/",
+    "http://localhost:8080/"
   ]
   
   # Identity providers
