@@ -214,6 +214,13 @@ aws cognito-idp list-users --user-pool-id $(terraform output -raw cognito_user_p
   xargs -I {} aws cognito-idp admin-reset-user-password \
     --user-pool-id $(terraform output -raw cognito_user_pool_id) --username {}
 
+# Update local development environment variables
+echo "🔧 Update your local development environment with new Cognito values:"
+echo "COGNITO_CLIENT_ID=$(terraform output -raw cognito_client_id)"
+echo "COGNITO_USER_POOL_ID=$(terraform output -raw cognito_user_pool_id)"
+echo ""
+echo "📝 Update these in your local .env file, IDE run configurations, or environment variables"
+
 # Update monitoring/alerting
 # Notify stakeholders
 # Document what happened
@@ -288,6 +295,7 @@ Resource = ["${aws_secretsmanager_secret.bhashamitra_app_credentials.arn}*"]
 - ❌ **User passwords**: Cannot be exported/imported (users must reset)
 - ❌ **User sessions**: All users will need to log in again
 - ❌ **Application data**: If database snapshots are unavailable
+- ❌ **Local development configuration**: Cognito IDs change and must be updated manually
 
 ## **Regular Backup Schedule**
 ```bash
@@ -320,6 +328,7 @@ Resource = ["${aws_secretsmanager_secret.bhashamitra_app_credentials.arn}*"]
 5. **Recent Cognito user backups** exist (if user restoration needed)
 6. **Database snapshots** are available (if data restoration needed)
 7. **null provider** is available in Terraform (for DNS delays)
+8. **Local development environments** are updated with new Cognito IDs after recovery
 
 ## **Available Backup & Restore Scripts**
 
