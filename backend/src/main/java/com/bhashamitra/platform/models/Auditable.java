@@ -3,6 +3,7 @@ package com.bhashamitra.platform.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public abstract class Auditable {
     @PrePersist
     @PreUpdate
     protected void onPersistOrUpdate() {
-        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
         if (createdDate == null) {
             createdDate = now;

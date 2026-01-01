@@ -20,3 +20,9 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.web.client: DEBUG
