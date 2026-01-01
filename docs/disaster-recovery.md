@@ -1,422 +1,353 @@
-# BhashaMitra Disaster Recovery Guide
+# **BhashaMitra Disaster Recovery Guide**
 
-## 🚨 **Complete Disaster Recovery Sequence**
 
-### **Prerequisites**
-- Access to AWS CLI with proper credentials
-- Terraform installed locally (with null provider support)
-- GitHub repository access with workflow permissions
-- **Recent Cognito user backup** (see backup procedure below)
+## 🎯 Recovery Objectives
 
-### **🛡️ CRITICAL: Cognito User Protection**
+* **RTO (Recovery Time Objective)**: ~75 minutes
+* **RPO (Recovery Point Objective)**:
 
-**Before any disaster:**
+  * **Database**: Last successful Aurora snapshot
+  * **Cognito users**: Last Cognito backup (weekly/monthly)
+
+---
+
+## 🚨 Start Here
+
 ```bash
-# Run regular backups (weekly/monthly)
+export AWS_PROFILE=prod
+cd bhashamitra-platform/infra
+terraform init -upgrade
+```
+
+---
+
+## 🚨 Complete Disaster Recovery Sequence
+
+---
+
+## 🛑 Stop Conditions (Do NOT Proceed)
+
+* AWS account access is impaired (`aws sts get-caller-identity` fails)
+* Terraform backend/state is inaccessible or missing
+* Route53 hosted zone is deleted or domain ownership is lost
+* Cognito user pool is destroyed **and** no recent Cognito backup exists
+* You are unsure whether you are operating in **production vs staging**
+
+If any of the above are true, stop and reassess before proceeding.
+
+---
+
+## 🧭 Choose Your Recovery Path
+
+* **Path A – Infra-only rebuild**
+  App down, Cognito and DB intact
+  → Steps **1, 3A, 4–10**
+
+* **Path B – Full rebuild + Cognito restore**
+  Infra destroyed, Cognito lost
+  → Steps **1–10 + 7 + 12**
+
+* **Path C – Full rebuild + Database restore**
+  Application data must be recovered
+  → Steps **1–10 + 11**
+
+---
+
+## 📋 Prerequisites
+
+* AWS CLI access with sufficient permissions
+* Terraform installed (with `null` provider support)
+* GitHub repository access with workflow permissions
+* **Recent Cognito user backup** (see backup procedure below)
+
+---
+
+## 🛡️ CRITICAL: Cognito User Protection
+
+### Before any disaster
+
+```bash
 cd bhashamitra-platform
 ./scripts/backup-cognito-users.sh
-
-# Store backups in secure location (S3, encrypted storage)
-aws s3 cp cognito-backups/ s3://your-backup-bucket/cognito/ --recursive
 ```
 
-**Current Protection:**
-- ✅ `deletion_protection = "ACTIVE"` - Prevents AWS console deletion
-- ✅ `lifecycle { prevent_destroy = true }` - Prevents `terraform destroy`
-- ✅ Backup scripts for user data export/import
+### Current Protections
 
-### **🎯 PROVEN DISASTER RECOVERY PROCESS**
+* ✅ `deletion_protection = "ACTIVE"`
+* ✅ `lifecycle { prevent_destroy = true }`
+* ✅ User export/import scripts available
 
-**This process has been tested and verified to work 100% reliably.**
+---
 
-### **Step 1: Assess the Damage**
+## 🎯 Proven Disaster Recovery Process
+
+**This process has been tested end-to-end and verified to work reliably.**
+
+---
+
+## Step 1: Assess the Damage
+
 ```bash
-# Check what's still working
-aws sts get-caller-identity  # Verify AWS access
-dig bhashamitra.com         # Check DNS resolution
-curl -I https://bhashamitra.com  # Check if site responds
+aws sts get-caller-identity
+dig bhashamitra.com
+curl -I https://bhashamitra.com
 
-# Check Cognito User Pool status
-aws cognito-idp describe-user-pool --user-pool-id $(terraform output -raw cognito_user_pool_id)
+aws cognito-idp describe-user-pool \
+  --user-pool-id $(terraform output -raw cognito_user_pool_id)
 ```
 
-### **Step 2: Backup Critical Data (if accessible)**
+---
+
+## Step 2: Backup Critical Data (If Accessible)
+
 ```bash
-# If Aurora is still accessible, create a snapshot using our script
 ./scripts/backup-aurora.sh
-
-# This creates a timestamped snapshot: disaster-recovery-YYYYMMDD-HHMMSS
-# The script will wait for completion and provide restore instructions
-
-# If Cognito is still accessible, backup users immediately
 ./scripts/backup-cognito-users.sh
+```
 
-# List existing snapshots to see what's available
+List available snapshots:
+
+```bash
 aws rds describe-db-cluster-snapshots \
   --db-cluster-identifier bhashamitra-aurora-cluster \
   --query 'DBClusterSnapshots[?starts_with(DBClusterSnapshotIdentifier, `disaster-recovery`)].{ID:DBClusterSnapshotIdentifier,Created:SnapshotCreateTime,Status:Status}' \
   --output table
 ```
 
-### **Step 3: Handle Cognito User Pool**
+---
 
-**Option A: If Cognito survived the disaster**
+## Step 3: Handle Cognito User Pool
+
+### Option A: Cognito Survived
+
 ```bash
-# Cognito is protected by prevent_destroy, so it should survive
-# Verify users are intact
-aws cognito-idp list-users --user-pool-id $(terraform output -raw cognito_user_pool_id) --limit 10
+aws cognito-idp list-users \
+  --user-pool-id $(terraform output -raw cognito_user_pool_id) \
+  --limit 10
 ```
 
-**Option B: If Cognito was destroyed (requires manual override)**
-```bash
-# If you need to destroy Cognito (emergency only):
-# 1. Remove prevent_destroy from cognito.tf temporarily
-# 2. Run terraform destroy
-# 3. Restore prevent_destroy
-# 4. Follow user restoration steps below
-```
-
-### **Step 4: Complete Infrastructure Destruction**
-```bash
-cd bhashamitra-platform/infra
-
-# Initialize Terraform (ensure null provider is available)
-terraform init -upgrade
-
-# Complete destruction - this will FAIL if Cognito has prevent_destroy (which is good!)
-terraform destroy -auto-approve
-
-# Expected: ~15-20 minutes for complete destruction
-# If you see error about prevent_destroy, that's protecting your users!
-```
-
-### **Step 5: Rebuild Infrastructure (Bulletproof Process)**
-```bash
-# Recreate all infrastructure from scratch
-terraform init -upgrade
-terraform plan
-
-# Apply with proven reliability fixes:
-# - 120-second DNS propagation delay
-# - Proper Cognito domain dependency chain
-# - ACM certificate in us-east-1
-# - Apex A record created before Cognito domain
-terraform apply -auto-approve
-
-# Expected: ~15-20 minutes for complete rebuild
-# The process will automatically handle DNS timing issues
-```
-
-**Infrastructure Rebuild Details:**
-- ✅ **DNS Propagation**: 120-second delay ensures proper DNS settling
-- ✅ **Dependency Chain**: Cognito domain waits for apex A record creation
-- ✅ **Certificate Validation**: ACM cert in us-east-1 for Cognito CloudFront
-- ✅ **Timing Protection**: null_resource prevents race conditions
-
-**Expected State After Step 5:**
-- ✅ ECS cluster running with nginx placeholder
-- ✅ Aurora database cluster (empty or restored from snapshot)
-- ✅ ALB serving traffic (502 expected until app deployment)
-- ✅ DNS pointing to new ALB
-- ✅ Cognito User Pool with custom domain working (but no users yet)
-- ✅ SSL certificates valid for all domains
-- ⚠️ Website shows 502 (expected until app deployment)
-
-### **Step 6: Create Application Database User**
-```bash
-# Create the application user in Aurora using RDS Data API
-./scripts/create-app-user.sh
-
-# Expected: ~30 seconds
-# This creates the 'bhashamitra' user that the application needs to connect
-```
-
-**What This Does:**
-- ✅ Uses secure RDS Data API (no network connectivity needed)
-- ✅ Creates `bhashamitra` user with proper permissions
-- ✅ Uses master credentials to create application user
-- ✅ Verifies user creation and permissions
-
-### **Step 7: Restore Cognito Users**
-```bash
-# Restore users from the most recent backup
-./scripts/restore-cognito-users.sh \
-  ./cognito-backups/users-backup-YYYYMMDD-HHMMSS.json \
-  $(terraform output -raw cognito_user_pool_id)
-
-# Expected: ~1-2 minutes depending on user count
-```
-
-**What This Does:**
-- ✅ Restores all users with temporary passwords
-- ✅ Restores group memberships (admin, editor, learner)
-- ✅ Sets temporary password: `TempPassword123!`
-- ⚠️ Users must reset passwords on first login
-
-### **Step 8: Verify Infrastructure Health**
-```bash
-# Test all endpoints before app deployment
-curl -I https://bhashamitra.com/          # Should return 502 (no app yet)
-curl -I http://bhashamitra.com/           # Should redirect to HTTPS
-curl -I https://www.bhashamitra.com/      # Should redirect to non-www
-curl -I https://auth.bhashamitra.com/     # Should return 200 (Cognito UI)
-
-# All should work before proceeding to app deployment
-```
-
-### **Step 9: Deploy Application**
-```bash
-# Trigger GitHub Actions deployment
-gh workflow run deploy.yml
-
-# Monitor deployment progress
-gh run list --limit 1
-gh run view --log
-
-# Expected: ~5-10 minutes for deployment
-```
-
-### **Step 10: Verify Complete Recovery**
-```bash
-# Check application health
-curl -f https://bhashamitra.com/actuator/health/liveness
-curl -f https://bhashamitra.com/actuator/health/readiness
-
-# Check database connectivity
-curl -f https://bhashamitra.com/actuator/health/db
-
-# Test authentication workflow (should redirect to Cognito login)
-echo "🔐 Testing authentication workflow..."
-echo "Visit: https://bhashamitra.com/api/me"
-echo "Expected: Should redirect to Cognito login page (auth.bhashamitra.com)"
-echo "After login: Should return user information or API response"
-
-# Verify authentication endpoints
-curl -I https://bhashamitra.com/api/me
-echo "Expected: 302 redirect to auth.bhashamitra.com or 401 Unauthorized"
-
-# Test protected API endpoints (all /api/* routes require authentication)
-echo "🔒 Testing protected API routes..."
-curl -I https://bhashamitra.com/api/me
-echo "Expected: Should redirect to Cognito login if not authenticated"
-
-# Check user count matches backup (if Cognito was preserved)
-aws cognito-idp list-users --user-pool-id $(terraform output -raw cognito_user_pool_id) | jq '.Users | length'
-echo "Expected: Should match the number of users from backup"
-```
-
-### **Step 11: Restore Database (if needed)**
-```bash
-# Option A: Restore from snapshot using our script (recommended)
-# List available snapshots first
-aws rds describe-db-cluster-snapshots \
-  --query 'DBClusterSnapshots[?starts_with(DBClusterSnapshotIdentifier, `disaster-recovery`)].{ID:DBClusterSnapshotIdentifier,Created:SnapshotCreateTime,Status:Status}' \
-  --output table
-
-# Restore using the script (creates new cluster alongside existing one)
-./scripts/restore-aurora.sh disaster-recovery-YYYYMMDD-HHMMSS bhashamitra-aurora-cluster-restored
-
-# The script will:
-# - Validate snapshot exists and is available
-# - Create new cluster with proper configuration
-# - Wait for cluster and instance to be ready
-# - Provide validation instructions
-
-# Option B: Let Liquibase recreate schema on first app deployment
-# (Only if you don't need existing data)
-```
-
-**Important Notes for Database Restore:**
-- The restore script creates a **new cluster** alongside the existing one
-- You'll need to update application configuration to use the new endpoint
-- The original cluster remains untouched for safety
-- Restored cluster uses `db.t3.medium` instances (AWS CLI limitation)
-- Always validate data integrity after restore
-
-### **Step 12: Send Password Reset Emails**
-```bash
-# Send password reset emails to all restored users
-aws cognito-idp list-users --user-pool-id $(terraform output -raw cognito_user_pool_id) \
-  --query 'Users[].Username' --output text | \
-  xargs -I {} aws cognito-idp admin-reset-user-password \
-    --user-pool-id $(terraform output -raw cognito_user_pool_id) --username {}
-
-echo "📧 Password reset emails sent to all users"
-echo "⚠️  Users must reset their passwords on first login"
-```
-
-### **Step 13: Post-Recovery Tasks**
-```bash
-# Update local development environment variables
-echo "🔧 Update your local development environment with new Cognito values:"
-echo "COGNITO_CLIENT_ID=$(terraform output -raw cognito_client_id)"
-echo "COGNITO_USER_POOL_ID=$(terraform output -raw cognito_user_pool_id)"
-echo ""
-echo "📝 Update these in your local .env file, IDE run configurations, or environment variables"
-
-# Update monitoring/alerting
-# Notify stakeholders
-# Document what happened
-# Update disaster recovery procedures
-
-# Check logs for any issues
-aws logs describe-log-groups --log-group-name-prefix "/ecs/bhashamitra"
-```
-
-## **Expected Timeline**
-- **Steps 1-3**: 5 minutes (assessment and backup)
-- **Step 4**: 15-20 minutes (complete infrastructure destruction)
-- **Step 5**: 15-20 minutes (infrastructure rebuild with reliability fixes)
-- **Step 6**: 30 seconds (create application database user)
-- **Step 7**: 1-2 minutes (restore Cognito users from backup)
-- **Step 8**: 2 minutes (infrastructure health verification)
-- **Step 9**: 5-10 minutes (application deployment via GitHub Actions)
-- **Step 10**: 5 minutes (application health verification)
-- **Steps 11-13**: 10-30 minutes (database restoration and post-recovery tasks if needed)
-
-**Total Recovery Time: ~45-75 minutes** (depending on database restoration needs)
-
-## **🔧 Reliability Improvements Implemented**
-
-The DR process includes these proven fixes for 100% success rate:
-
-### **DNS Propagation Protection**
-- 120-second delay after certificate validation
-- Prevents Cognito domain creation race conditions
-- Handles AWS DNS propagation timing requirements
-
-### **Dependency Chain Enforcement**
-```hcl
-# Cognito domain waits for apex A record
-depends_on = [
-  null_resource.dns_propagation_delay,
-  aws_route53_record.bhashamitra_root
-]
-```
-
-### **Certificate Configuration**
-- ACM certificate correctly placed in us-east-1 for Cognito
-- Proper CloudFront integration for custom domain
-
-### **Secrets Manager IAM Policy**
-```hcl
-# Wildcard pattern handles ARN suffix changes after destroy/apply
-Resource = ["${aws_secretsmanager_secret.bhashamitra_app_credentials.arn}*"]
-```
-
-### **Dynamic Configuration**
-- ECS task definition uses Terraform references for Cognito values
-- No hardcoded IDs that break after infrastructure recreation
-- Automatic updates when resources are recreated
-
-### **Infrastructure Ordering**
-1. VPC, subnets, security groups
-2. ALB and target groups
-3. Route53 apex A record (critical!)
-4. Certificate validation with DNS delay
-5. Cognito custom domain (depends on apex record)
-6. ECS task definition with dynamic values
-7. Application deployment
-
-## **What Survives Disasters**
-- ✅ **GitHub Repository**: Source code and configuration
-- ✅ **ECR Images**: Docker images (unless ECR is deleted)
-- ✅ **Route 53 Hosted Zone**: DNS configuration
-- ✅ **Cognito User Pool**: Protected by `prevent_destroy` + `deletion_protection`
-- ✅ **Aurora Snapshots**: Database backups
-- ✅ **Secrets Manager**: Database credentials
-
-## **What Gets Lost Without Backups**
-- ❌ **User passwords**: Cannot be exported/imported (users must reset)
-- ❌ **User sessions**: All users will need to log in again
-- ❌ **Application data**: If database snapshots are unavailable
-- ❌ **Local development configuration**: Cognito IDs change and must be updated manually
-
-## **Regular Backup Schedule**
-```bash
-# Weekly automated Aurora backup (add to cron)
-0 2 * * 0 /path/to/bhashamitra-platform/scripts/backup-aurora.sh
-
-# Weekly automated Cognito backup (add to cron)
-0 3 * * 0 /path/to/bhashamitra-platform/scripts/backup-cognito-users.sh
-
-# Monthly full backup with S3 upload
-0 1 1 * * /path/to/bhashamitra-platform/scripts/backup-aurora.sh && \
-  /path/to/bhashamitra-platform/scripts/backup-cognito-users.sh && \
-  aws s3 sync /path/to/cognito-backups s3://your-backup-bucket/cognito/
-
-# Backup retention: Keep disaster-recovery snapshots for 30 days
-# (Configure via AWS RDS snapshot retention policies)
-```
-
-**Backup Best Practices:**
-- Aurora snapshots are incremental and cost-effective
-- Cognito user backups are small JSON files
-- Test restore procedures monthly in staging
-- Store Cognito backups in multiple locations (S3, encrypted storage)
-
-## **Critical Success Factors**
-1. **Terraform state** is accessible (S3 backend)
-2. **GitHub repository** is intact with workflow permissions
-3. **AWS credentials** are valid with proper permissions
-4. **Domain ownership** is maintained (Route 53 hosted zone)
-5. **Recent Cognito user backups** exist (if user restoration needed)
-6. **Database snapshots** are available (if data restoration needed)
-7. **null provider** is available in Terraform (for DNS delays)
-8. **Local development environments** are updated with new Cognito IDs after recovery
-
-## **Available Backup & Restore Scripts**
-
-### **Aurora Database Scripts**
-- `./scripts/backup-aurora.sh` - Creates timestamped cluster snapshots
-- `./scripts/restore-aurora.sh <snapshot-id> <new-cluster-id>` - Restores from snapshot
-
-### **Cognito User Scripts**  
-- `./scripts/backup-cognito-users.sh` - Exports users and groups to JSON
-- `./scripts/restore-cognito-users.sh <backup-file> <user-pool-id>` - Imports users
-
-### **Script Features**
-- ✅ **Error handling** - Scripts fail fast on errors
-- ✅ **Progress monitoring** - Real-time status updates  
-- ✅ **Validation** - Checks prerequisites and results
-- ✅ **Safety** - Creates new resources, doesn't modify existing
-- ✅ **Detailed output** - Clear instructions and next steps
-
-## **🧪 Testing & Validation**
-
-**This DR process has been tested and validated:**
-- ✅ Complete destroy → apply cycle works 100%
-- ✅ Cognito custom domain creates reliably
-- ✅ DNS timing issues resolved
-- ✅ All endpoints functional after rebuild
-- ✅ Application deployment succeeds
-- ✅ Database user creation via RDS Data API
-- ✅ Cognito user restoration from backups
-- ✅ Authentication workflow (protected /api/* routes)
-
-**Test Schedule:**
-- Monthly: Run Steps 1-8 in staging environment
-- Quarterly: Full DR test including user restoration
-- Annually: Complete disaster simulation with team
-
-**Key Test URLs:**
-- `https://bhashamitra.com/` - Main application (should load)
-- `https://bhashamitra.com/actuator/health/liveness` - Health check
-- `https://bhashamitra.com/api/me` - Authentication test (should redirect to login)
-- `https://auth.bhashamitra.com/` - Cognito hosted UI (should load)
-
-**Authentication Test Details:**
-- Any `/api/*` route requires authentication
-- Unauthenticated requests to `/api/me` should redirect to `auth.bhashamitra.com`
-- After successful login, `/api/me` should return user information
-- This validates the complete authentication workflow
-
-## **Emergency Contacts**
-- AWS Support: [Your support plan details]
-- Domain Registrar: [Contact information]
-- Team Lead: [Contact information]
-- Database Admin: [Contact information]
+### Option B: Cognito Destroyed (Emergency Only)
+
+1. Temporarily remove `prevent_destroy` from `cognito.tf`
+2. Run `terraform destroy`
+3. Restore `prevent_destroy`
+4. Proceed with user restoration steps
 
 ---
 
-**🚨 Remember: Test this procedure regularly in a staging environment!**
+## Step 4: Destroy What You Can (Cognito Should Be Protected)
+
+```bash
+cd bhashamitra-platform/infra
+terraform init -upgrade
+terraform destroy -auto-approve
+```
+
+* Expected duration: **15–20 minutes**
+* Failure due to `prevent_destroy` is **expected and desired**
+
+---
+
+## Step 5: Rebuild Infrastructure (Bulletproof Process)
+
+```bash
+terraform init -upgrade
+terraform plan
+terraform apply -auto-approve
+```
+
+### Reliability Fixes Applied
+
+* 120-second DNS propagation delay
+* Explicit dependency chain for Cognito domain
+* ACM certificate in `us-east-1`
+* Apex A record created **before** Cognito domain
+
+### Expected State After Rebuild
+
+* ✅ ECS cluster running (nginx placeholder)
+* ✅ Aurora cluster available (empty or restored)
+* ✅ ALB reachable (502 expected)
+* ✅ DNS resolving correctly
+* ✅ Cognito custom domain operational
+* ⚠️ App not yet deployed
+
+---
+
+## Step 6: Create Application Database User
+
+```bash
+./scripts/create-app-user.sh
+```
+
+* Uses RDS Data API
+* Creates `bhashamitra` DB user
+* Verifies permissions
+
+---
+
+## Step 7: Restore Cognito Users (If Needed)
+
+```bash
+./scripts/restore-cognito-users.sh \
+  ./cognito-backups/users-backup-YYYYMMDD-HHMMSS.json \
+  $(terraform output -raw cognito_user_pool_id)
+```
+
+* Users restored with temporary password
+* Group memberships restored
+* Password reset required on first login
+
+---
+
+## Step 8: Verify Infrastructure Health
+
+```bash
+curl -I https://bhashamitra.com/
+curl -I http://bhashamitra.com/
+curl -I https://www.bhashamitra.com/
+curl -I https://auth.bhashamitra.com/
+```
+
+Expected:
+
+* 502 on main site (pre-deployment)
+* HTTPS redirect working
+* Cognito Hosted UI returns 200
+
+---
+
+## Step 9: Deploy Application
+
+```bash
+gh workflow run deploy.yml
+gh run list --limit 1
+gh run view --log
+```
+
+Expected duration: **5–10 minutes**
+
+---
+
+## Step 10: Verify Complete Recovery
+
+```bash
+curl -f https://bhashamitra.com/actuator/health/liveness
+curl -f https://bhashamitra.com/actuator/health/readiness
+curl -f https://bhashamitra.com/actuator/health/db
+curl -I https://bhashamitra.com/api/me
+```
+
+Authentication expectations:
+
+* `/api/*` redirects to Cognito if unauthenticated
+* Successful login returns user data
+
+---
+
+## Step 11: Restore Database (If Needed)
+
+```bash
+./scripts/restore-aurora.sh disaster-recovery-YYYYMMDD-HHMMSS bhashamitra-aurora-cluster-restored
+```
+
+Notes:
+
+* New cluster is created alongside existing
+* Application config must be updated to new endpoint
+* Original cluster remains untouched
+
+---
+
+## Step 12: Send Password Reset Emails
+
+```bash
+aws cognito-idp list-users \
+  --user-pool-id $(terraform output -raw cognito_user_pool_id) \
+  --query 'Users[].Username' --output text | \
+  xargs -I {} aws cognito-idp admin-reset-user-password \
+    --user-pool-id $(terraform output -raw cognito_user_pool_id) \
+    --username {}
+```
+
+---
+
+## Step 13: Post-Recovery Tasks
+
+```bash
+echo "COGNITO_CLIENT_ID=$(terraform output -raw cognito_client_id)"
+echo "COGNITO_USER_POOL_ID=$(terraform output -raw cognito_user_pool_id)"
+```
+
+* Update monitoring and alerting
+* Notify stakeholders
+* Document incident and lessons learned
+* Review and update DR procedures
+
+---
+
+## ✅ Recovery Complete Checklist
+
+* [ ] `https://bhashamitra.com/` returns 200
+* [ ] Liveness & readiness probes return UP
+* [ ] `/api/me` redirects to Cognito when logged out
+* [ ] Cognito Hosted UI loads successfully
+* [ ] At least one user can log in
+* [ ] Database integrity validated (if restored)
+
+---
+
+## Expected Timeline
+
+* Steps 1–3: ~5 minutes
+* Step 4: 15–20 minutes
+* Step 5: 15–20 minutes
+* Step 6: <1 minute
+* Step 7: 1–2 minutes
+* Step 8: ~2 minutes
+* Step 9: 5–10 minutes
+* Step 10: ~5 minutes
+* Optional DB restore & cleanup: 10–30 minutes
+
+**Total RTO: ~45–75 minutes**
+
+---
+
+## 🔧 What Survives vs What Doesn’t
+
+### Survives
+
+* GitHub repository
+* Route53 hosted zone
+* Cognito user pool (protected)
+* Aurora snapshots
+* Secrets Manager
+* ECR images
+
+### Lost Without Backups
+
+* User passwords
+* Active sessions
+* Application data
+* Local configuration values
+
+---
+
+## 🧪 Testing & Validation
+
+* Monthly: Steps 1–8 in staging
+* Quarterly: Full DR including user restore
+* Annually: Full disaster simulation
+
+---
+
+## Emergency Contacts
+
+* AWS Support: [details]
+* Domain Registrar: [details]
+* Team Lead: [details]
+* Database Admin: [details]
+
+---
+
+**🚨 This runbook is production-grade. Test it regularly.**
