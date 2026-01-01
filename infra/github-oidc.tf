@@ -114,6 +114,36 @@ resource "aws_iam_policy" "ecs_permissions" {
   })
 }
 
+# Secrets Manager and Cognito permissions policy
+resource "aws_iam_policy" "secrets_cognito_permissions" {
+  name        = "github-actions-secrets-cognito-permissions"
+  description = "Permissions for GitHub Actions to access Secrets Manager and Cognito for dynamic configuration"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:bhashamitra/app/credentials-*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:ListUserPools",
+          "cognito-idp:ListUserPoolClients",
+          "cognito-idp:DescribeUserPool",
+          "cognito-idp:DescribeUserPoolClient"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # Attach policies to the GitHub Actions role
 resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
   role       = aws_iam_role.github_actions.name
@@ -123,6 +153,11 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
 resource "aws_iam_role_policy_attachment" "github_actions_ecs" {
   role       = aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.ecs_permissions.arn
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_secrets_cognito" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = aws_iam_policy.secrets_cognito_permissions.arn
 }
 
 # Output the role ARN for GitHub secrets
