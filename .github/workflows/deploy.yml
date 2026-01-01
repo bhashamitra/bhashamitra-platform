@@ -72,7 +72,12 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
         run: |
-          # Create a temporary task definition with the new image
+          # Get current infrastructure values from Terraform outputs
+          SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "bhashamitra/app/credentials" --query 'ARN' --output text)
+          COGNITO_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id $(aws cognito-idp list-user-pools --max-items 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text) --query 'UserPoolClients[0].ClientId' --output text)
+          COGNITO_USER_POOL_ID=$(aws cognito-idp list-user-pools --max-items 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text)
+          
+          # Create a temporary task definition with the new image and current values
           cat > temp-taskdef.json << EOF
           {
             "family": "bhashamitra",
@@ -105,23 +110,23 @@ jobs:
                 "secrets": [
                   {
                     "name": "DB_HOST",
-                    "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:host::"
+                    "valueFrom": "${SECRET_ARN}:host::"
                   },
                   {
                     "name": "DB_PORT",
-                    "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:port::"
+                    "valueFrom": "${SECRET_ARN}:port::"
                   },
                   {
                     "name": "DB_NAME",
-                    "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:dbname::"
+                    "valueFrom": "${SECRET_ARN}:dbname::"
                   },
                   {
                     "name": "DB_USERNAME",
-                    "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:username::"
+                    "valueFrom": "${SECRET_ARN}:username::"
                   },
                   {
                     "name": "DB_PASSWORD",
-                    "valueFrom": "arn:aws:secretsmanager:us-west-1:239408179735:secret:bhashamitra/app/credentials-b2BrLz:password::"
+                    "valueFrom": "${SECRET_ARN}:password::"
                   }
                 ],
                 "environment": [
@@ -131,11 +136,11 @@ jobs:
                   },
                   {
                     "name": "COGNITO_CLIENT_ID",
-                    "value": "7cdbeojvue3dmmlks8qf3hf3gj"
+                    "value": "${COGNITO_CLIENT_ID}"
                   },
                   {
                     "name": "COGNITO_USER_POOL_ID",
-                    "value": "us-west-1_EAIAbURr1"
+                    "value": "${COGNITO_USER_POOL_ID}"
                   }
                 ],
                 "logConfiguration": {
