@@ -84,7 +84,7 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          aws_secretsmanager_secret.bhashamitra_app_credentials.arn
+          "${aws_secretsmanager_secret.bhashamitra_app_credentials.arn}*"
         ]
       }
     ]
@@ -119,19 +119,19 @@ resource "aws_ecs_task_definition" "bhashamitra" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn           = aws_iam_role.ecs_task_role.arn
 
+  # Use nginx as placeholder - GitHub Actions will update with real image
   container_definitions = jsonencode([
     {
       name  = "bhashamitra-app"
-      image = "nginx:latest"  # This will be replaced by GitHub Actions
+      image = "nginx:latest"  # Placeholder - will be updated by GitHub Actions
       
       portMappings = [
         {
-          containerPort = 8080  # Spring Boot default port
+          containerPort = 8080
           protocol      = "tcp"
         }
       ]
 
-      # Container health check (separate from ALB health check)
       healthCheck = {
         command = [
           "CMD-SHELL",
@@ -143,7 +143,6 @@ resource "aws_ecs_task_definition" "bhashamitra" {
         startPeriod = 60
       }
 
-      # Environment variables from Secrets Manager
       secrets = [
         {
           name      = "DB_HOST"
@@ -167,15 +166,21 @@ resource "aws_ecs_task_definition" "bhashamitra" {
         }
       ]
 
-      # Static environment variables
       environment = [
         {
           name  = "SPRING_PROFILES_ACTIVE"
           value = "production"
+        },
+        {
+          name  = "COGNITO_CLIENT_ID"
+          value = aws_cognito_user_pool_client.bhashamitra_app.id
+        },
+        {
+          name  = "COGNITO_USER_POOL_ID"
+          value = aws_cognito_user_pool.bhashamitra.id
         }
       ]
 
-      # Logging configuration
       logConfiguration = {
         logDriver = "awslogs"
         options = {

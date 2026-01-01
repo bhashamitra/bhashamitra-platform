@@ -8,8 +8,9 @@ resource "random_password" "bhashamitra_app_password" {
 
 # Store application user credentials in AWS Secrets Manager
 resource "aws_secretsmanager_secret" "bhashamitra_app_credentials" {
-  name        = "bhashamitra/app/credentials"
-  description = "Application user credentials for Bhashamitra Spring Boot app"
+  name                    = "bhashamitra/app/credentials"
+  description             = "Application user credentials for Bhashamitra Spring Boot app"
+  recovery_window_in_days = 0  # Allow immediate deletion and recreation for DR testing
 
   tags = {
     Name        = "bhashamitra-app-credentials"
@@ -106,8 +107,8 @@ resource "aws_rds_cluster" "bhashamitra_aurora" {
   
   # Security settings
   storage_encrypted = true
-  skip_final_snapshot = false
-  final_snapshot_identifier = "bhashamitra-aurora-final-snapshot"
+  skip_final_snapshot = true  # Skip final snapshot for DR testing
+  # final_snapshot_identifier = "bhashamitra-aurora-final-snapshot"
   
   # Performance and monitoring
   enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]

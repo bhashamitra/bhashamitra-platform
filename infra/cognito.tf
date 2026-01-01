@@ -38,8 +38,15 @@ resource "aws_cognito_user_pool" "bhashamitra" {
     advanced_security_mode = "ENFORCED"
   }
 
-  # Deletion protection
-  deletion_protection = "ACTIVE"
+  # Deletion protection - prevents accidental deletion
+  # TEMPORARILY DISABLED FOR DR TESTING
+  # deletion_protection = "ACTIVE"
+
+  # Prevent Terraform from destroying this resource
+  # TEMPORARILY COMMENTED OUT FOR DR TESTING
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 
   tags = {
     Name        = "bhashamitra-user-pool"
@@ -178,11 +185,34 @@ resource "aws_acm_certificate_validation" "cognito_auth" {
   }
 }
 
+# DNS propagation delay resource
+resource "null_resource" "dns_propagation_delay" {
+  depends_on = [
+    aws_route53_record.cognito_auth_cert_validation,
+    aws_acm_certificate_validation.cognito_auth
+  ]
+
+  provisioner "local-exec" {
+    command = "echo 'Waiting for DNS propagation...' && sleep 120"
+  }
+
+  # Trigger re-creation if certificate changes
+  triggers = {
+    certificate_arn = aws_acm_certificate_validation.cognito_auth.certificate_arn
+  }
+}
+
 # Cognito User Pool Domain (Custom Domain)
 resource "aws_cognito_user_pool_domain" "bhashamitra_auth" {
   domain          = "auth.bhashamitra.com"
   certificate_arn = aws_acm_certificate_validation.cognito_auth.certificate_arn
   user_pool_id    = aws_cognito_user_pool.bhashamitra.id
+
+  # Ensure DNS propagation delay is complete AND apex record exists
+  depends_on = [
+    null_resource.dns_propagation_delay,
+    aws_route53_record.bhashamitra_root
+  ]
 }
 
 # Route 53 record for auth.bhashamitra.com

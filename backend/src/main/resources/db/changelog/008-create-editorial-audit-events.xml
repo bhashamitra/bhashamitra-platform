@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="satish" id="008-create-editorial-audit-events">
+
+        <createTable tableName="editorial_audit_events">
+
+            <!-- ===== Editorial audit domain fields ===== -->
+
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- e.g. LEMMA, SENTENCE, PRONUNCIATION -->
+            <column name="entity_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- UUID of lemma / sentence / etc -->
+            <column name="entity_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- CREATED, UPDATED, SUBMITTED_FOR_REVIEW, APPROVED, PUBLISHED, etc -->
+            <column name="event_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Cognito username or email of editor/admin who performed the action -->
+            <column name="actor" type="VARCHAR(125)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Optional human-readable comment -->
+            <column name="comment" type="TEXT"/>
+
+            <!-- Optional JSON/text with extra metadata -->
+            <column name="details" type="TEXT"/>
+
+            <!-- When the editorial event occurred -->
+            <column name="event_ts" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- ===== Auditable base fields ===== -->
+
+            <column name="created_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <!-- ===== Indexes ===== -->
+
+        <!-- Timeline for a given entity -->
+        <createIndex tableName="editorial_audit_events" indexName="idx_eae_entity_ts">
+            <column name="entity_type"/>
+            <column name="entity_id"/>
+            <column name="event_ts"/>
+        </createIndex>
+
+        <!-- Recent activity by event type -->
+        <createIndex tableName="editorial_audit_events" indexName="idx_eae_event_type_ts">
+            <column name="event_type"/>
+            <column name="event_ts"/>
+        </createIndex>
+
+        <!-- Activity by user -->
+        <createIndex tableName="editorial_audit_events" indexName="idx_eae_actor_ts">
+            <column name="actor"/>
+            <column name="event_ts"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="editorial_audit_events"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

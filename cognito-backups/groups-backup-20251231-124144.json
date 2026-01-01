@@ -1,0 +1,28 @@
+{
+    "Groups": [
+        {
+            "GroupName": "admin",
+            "UserPoolId": "us-west-1_EAIAbURr1",
+            "Description": "Platform administrators - can manage users and roles",
+            "Precedence": 1,
+            "LastModifiedDate": "2025-12-30T09:48:45.411000-08:00",
+            "CreationDate": "2025-12-30T09:48:45.411000-08:00"
+        },
+        {
+            "GroupName": "learner",
+            "UserPoolId": "us-west-1_EAIAbURr1",
+            "Description": "Default role for all users - can access learning content",
+            "Precedence": 3,
+            "LastModifiedDate": "2025-12-30T09:48:45.369000-08:00",
+            "CreationDate": "2025-12-30T09:48:45.369000-08:00"
+        },
+        {
+            "GroupName": "editor",
+            "UserPoolId": "us-west-1_EAIAbURr1",
+            "Description": "Content editors - can create and curate learning materials",
+            "Precedence": 2,
+            "LastModifiedDate": "2025-12-30T09:48:45.369000-08:00",
+            "CreationDate": "2025-12-30T09:48:45.369000-08:00"
+        }
+    ]
+}

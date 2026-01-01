@@ -12,5 +12,5 @@
     <include file="db/changelog/005-create-usage-sentences.xml"/>
     <include file="db/changelog/006-create-lemma-sentence-links.xml"/>
     <include file="db/changelog/007-create-pronunciations.xml"/>
-
+    <include file="db/changelog/008-create-editorial-audit-events.xml"/>
 </databaseChangeLog>

@@ -1,0 +1,25 @@
+{
+    "Users": [
+        {
+            "Username": "599929be-70f1-70c4-5a4b-590bae0227f8",
+            "Attributes": [
+                {
+                    "Name": "email",
+                    "Value": "satish@itpragmatik.com"
+                },
+                {
+                    "Name": "email_verified",
+                    "Value": "true"
+                },
+                {
+                    "Name": "sub",
+                    "Value": "599929be-70f1-70c4-5a4b-590bae0227f8"
+                }
+            ],
+            "UserCreateDate": "2025-12-30T18:03:40.069000-08:00",
+            "UserLastModifiedDate": "2025-12-30T18:04:00.848000-08:00",
+            "Enabled": true,
+            "UserStatus": "CONFIRMED"
+        }
+    ]
+}
