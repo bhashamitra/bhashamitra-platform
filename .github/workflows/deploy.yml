@@ -74,8 +74,12 @@ jobs:
         run: |
           # Get current infrastructure values from Terraform outputs
           SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "bhashamitra/app/credentials" --query 'ARN' --output text)
-          COGNITO_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id $(aws cognito-idp list-user-pools --max-items 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text) --query 'UserPoolClients[0].ClientId' --output text)
-          COGNITO_USER_POOL_ID=$(aws cognito-idp list-user-pools --max-items 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text)
+          
+          # Get Cognito User Pool ID first
+          COGNITO_USER_POOL_ID=$(aws cognito-idp list-user-pools --max-results 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text)
+          
+          # Get Cognito Client ID using the User Pool ID
+          COGNITO_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id "$COGNITO_USER_POOL_ID" --query 'UserPoolClients[0].ClientId' --output text)
           
           # Create a temporary task definition with the new image and current values
           cat > temp-taskdef.json << EOF
