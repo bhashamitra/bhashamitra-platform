@@ -133,6 +133,32 @@ resource "aws_iam_policy" "secrets_cognito_permissions" {
       {
         Effect = "Allow"
         Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:rds!cluster-*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "rds-data:ExecuteStatement",
+          "rds-data:BatchExecuteStatement",
+          "rds-data:BeginTransaction",
+          "rds-data:CommitTransaction",
+          "rds-data:RollbackTransaction"
+        ]
+        Resource = "arn:aws:rds:${var.aws_region}:*:cluster:bhashamitra-aurora-cluster"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sts:GetCallerIdentity"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "cognito-idp:ListUserPools",
           "cognito-idp:ListUserPoolClients",
           "cognito-idp:DescribeUserPool",

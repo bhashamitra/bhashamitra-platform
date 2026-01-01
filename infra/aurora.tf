@@ -80,7 +80,7 @@ resource "aws_rds_cluster" "bhashamitra_aurora" {
   engine                 = "aurora-mysql"
   engine_version         = null  # Use latest available version
   database_name          = "bhashamitra"
-  master_username        = "bmladmin"
+  master_username        = "bmadmin"
   
   # Use AWS Secrets Manager for password management
   manage_master_user_password = true
