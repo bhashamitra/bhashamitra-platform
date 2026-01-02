@@ -91,10 +91,41 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
   })
 }
 
+# Custom policy for accessing S3 audio bucket
+resource "aws_iam_policy" "ecs_s3_audio_policy" {
+  name        = "bhashamitra-ecs-s3-audio-policy"
+  description = "Policy for ECS tasks to access S3 audio bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.bhashamitra_audio.arn,
+          "${aws_s3_bucket.bhashamitra_audio.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Attach secrets policy to task execution role
 resource "aws_iam_role_policy_attachment" "ecs_secrets_policy_attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_secrets_policy.arn
+}
+
+# Attach S3 policy to task role (for application access)
+resource "aws_iam_role_policy_attachment" "ecs_s3_audio_policy_attachment" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_s3_audio_policy.arn
 }
 
 # CloudWatch Log Group for ECS tasks
@@ -178,6 +209,14 @@ resource "aws_ecs_task_definition" "bhashamitra" {
         {
           name  = "COGNITO_USER_POOL_ID"
           value = aws_cognito_user_pool.bhashamitra.id
+        },
+        {
+          name  = "S3_AUDIO_BUCKET_NAME"
+          value = aws_s3_bucket.bhashamitra_audio.bucket
+        },
+        {
+          name  = "AWS_REGION"
+          value = var.aws_region
         }
       ]
 

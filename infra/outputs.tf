@@ -187,3 +187,19 @@ output "cognito_client_id" {
   description = "Cognito App Client ID for backend configuration"
   value       = aws_cognito_user_pool_client.bhashamitra_app.id
 }
+
+# S3 outputs
+output "s3_audio_bucket_name" {
+  description = "Name of the S3 bucket for audio files"
+  value       = aws_s3_bucket.bhashamitra_audio.bucket
+}
+
+output "s3_audio_bucket_arn" {
+  description = "ARN of the S3 bucket for audio files"
+  value       = aws_s3_bucket.bhashamitra_audio.arn
+}
+
+output "s3_audio_bucket_domain_name" {
+  description = "Domain name of the S3 bucket for audio files"
+  value       = aws_s3_bucket.bhashamitra_audio.bucket_domain_name
+}
