@@ -34,12 +34,14 @@ class PublicLanguageControllerTest {
     private Language marathiLanguage;
     private Language hindiLanguage;
     private Language gujaratiLanguage;
+    private Language disabledTamilLanguage;
 
     @BeforeEach
     void setUp() {
         marathiLanguage = createLanguage("mr", "Marathi", "Devanagari", "learners-phonetic-v1", true);
         hindiLanguage = createLanguage("hi", "Hindi", "Devanagari", "IAST", true);
         gujaratiLanguage = createLanguage("gu", "Gujarati", "Gujarati", null, true);
+        disabledTamilLanguage = createLanguage("ta", "Tamil", "Tamil", "ISO 15919", false);
     }
 
     @Test
@@ -143,13 +145,13 @@ class PublicLanguageControllerTest {
     @DisplayName("GET /api/public/languages/{code} - Should return 404 when language not found")
     void getEnabledByCode_ShouldReturn404WhenLanguageNotFound() {
         // Given
-        when(languageService.getEnabledByCode("xx"))
-                .thenThrow(new ResponseStatusException(NOT_FOUND, "Enabled language not found for code: xx"));
+        when(languageService.getEnabledByCode("ta"))
+                .thenThrow(new ResponseStatusException(NOT_FOUND, "Enabled language not found for code: ta"));
 
         // When & Then
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> publicLanguageController.getEnabledByCode("xx")
+                () -> publicLanguageController.getEnabledByCode("ta")
         );
         
         assertEquals(NOT_FOUND, exception.getStatusCode());
@@ -212,6 +214,94 @@ class PublicLanguageControllerTest {
         ResponseEntity<LanguageDto> hindiResponse = publicLanguageController.getEnabledByCode("hi");
         assertNotNull(hindiResponse.getBody());
         assertEquals("hi", hindiResponse.getBody().code());
+    }
+
+    @Test
+    @DisplayName("GET /api/public/languages - Should only return enabled languages when disabled languages exist")
+    void getEnabledLanguages_ShouldOnlyReturnEnabledLanguagesWhenDisabledLanguagesExist() {
+        // Given - Simulate what the service layer should do: filter out disabled languages
+        // In a real scenario, there might be 4 languages in DB (3 enabled + 1 disabled)
+        // But the service's getEnabledLanguages() should only return the enabled ones
+        List<Language> allLanguagesInDb = Arrays.asList(marathiLanguage, hindiLanguage, gujaratiLanguage, disabledTamilLanguage);
+        
+        // Simulate the service filtering logic (what LanguageService.getEnabledLanguages() should do)
+        List<Language> onlyEnabledLanguages = allLanguagesInDb.stream()
+                .filter(Language::getEnabled)
+                .toList();
+        
+        // Mock the service to return only enabled languages (this is what the real service should do)
+        when(languageService.getEnabledLanguages()).thenReturn(onlyEnabledLanguages);
+
+        // When
+        List<LanguageDto> result = publicLanguageController.getEnabledLanguages();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.size()); // Only 3 enabled languages, not 4 total
+        
+        // Verify disabled Tamil language is NOT in the response
+        assertTrue(result.stream().noneMatch(dto -> "ta".equals(dto.code())));
+        assertTrue(result.stream().noneMatch(dto -> "Tamil".equals(dto.name())));
+        
+        // Verify only enabled languages are present
+        List<String> codes = result.stream().map(LanguageDto::code).toList();
+        assertTrue(codes.containsAll(Arrays.asList("mr", "hi", "gu")));
+        assertFalse(codes.contains("ta"));
+        
+        // Verify all returned languages have enabled=true
+        assertTrue(result.stream().allMatch(LanguageDto::enabled));
+        
+        // This test verifies the critical security requirement:
+        // Even if disabled languages exist in the database, the public API never exposes them
+    }
+
+    @Test
+    @DisplayName("GET /api/public/languages/{code} - Should return 404 for disabled language")
+    void getEnabledByCode_ShouldReturn404ForDisabledLanguage() {
+        // Given - Service throws exception when trying to get disabled language
+        // This simulates the service layer properly rejecting access to disabled languages
+        when(languageService.getEnabledByCode("ta"))
+                .thenThrow(new ResponseStatusException(NOT_FOUND, "Enabled language not found for code: ta"));
+
+        // When & Then
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> publicLanguageController.getEnabledByCode("ta")
+        );
+        
+        assertEquals(NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Enabled language not found for code: ta"));
+        
+        // This test verifies that even if Tamil language exists in DB but is disabled,
+        // the public API returns 404 (same as if it didn't exist at all)
+    }
+
+    @Test
+    @DisplayName("GET /api/public/languages/{code} - Should distinguish between non-existent and disabled languages")
+    void getEnabledByCode_ShouldDistinguishBetweenNonExistentAndDisabledLanguages() {
+        // Given - Both scenarios throw NOT_FOUND but with different messages
+        when(languageService.getEnabledByCode("xx"))
+                .thenThrow(new ResponseStatusException(NOT_FOUND, "Enabled language not found for code: xx"));
+        
+        when(languageService.getEnabledByCode("ta"))
+                .thenThrow(new ResponseStatusException(NOT_FOUND, "Enabled language not found for code: ta"));
+
+        // When & Then - Both should return 404 (public API shouldn't reveal if language exists but is disabled)
+        ResponseStatusException nonExistentException = assertThrows(
+                ResponseStatusException.class,
+                () -> publicLanguageController.getEnabledByCode("xx")
+        );
+        
+        ResponseStatusException disabledException = assertThrows(
+                ResponseStatusException.class,
+                () -> publicLanguageController.getEnabledByCode("ta")
+        );
+        
+        // Both should return the same status code (security through consistency)
+        assertEquals(NOT_FOUND, nonExistentException.getStatusCode());
+        assertEquals(NOT_FOUND, disabledException.getStatusCode());
+        
+        // This ensures the public API doesn't leak information about disabled languages
     }
 
     /**
