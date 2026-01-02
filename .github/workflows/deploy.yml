@@ -19,25 +19,25 @@ jobs:
   deploy:
     name: Deploy to ECS
     runs-on: ubuntu-latest
-    
+
     permissions:
       id-token: write   # Required for OIDC
       contents: read    # Required to checkout code
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      
+
       - name: Set image tag
         id: image-tag
         run: |
@@ -47,10 +47,28 @@ jobs:
           else
             echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
-      
+
+      - name: Set build metadata
+        id: build-meta
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          TAG="${{ steps.image-tag.outputs.tag }}"
+          if [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            APP_VERSION="${TAG#v}"
+          else
+            APP_VERSION="0.0.0+${SHORT_SHA}"
+          fi
+
+          echo "app_version=$APP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          echo "build_time=$BUILD_TIME" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build and push Docker image
         id: build-image
         env:
@@ -65,25 +83,32 @@ jobs:
             --push \
             .
           echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
-      
+
       - name: Update task definition with new image
         id: task-def
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
         run: |
+          set -euo pipefail
+
           # Get current infrastructure values from Terraform outputs
           SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "bhashamitra/app/credentials" --query 'ARN' --output text)
-          
+
           # Get Cognito User Pool ID first
           COGNITO_USER_POOL_ID=$(aws cognito-idp list-user-pools --max-results 50 --query 'UserPools[?Name==`bhashamitra-user-pool`].Id' --output text)
-          
+
           # Get Cognito Client ID using the User Pool ID
           COGNITO_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id "$COGNITO_USER_POOL_ID" --query 'UserPoolClients[0].ClientId' --output text)
-          
-          # Get S3 bucket name from Terraform outputs (or use hardcoded value)
+
+          # Get S3 bucket name (hardcoded for now)
           S3_AUDIO_BUCKET_NAME="bhashamitra-audio-prod"
-          
+
+          # Build metadata from earlier step (already computed by GitHub Actions)
+          APP_VERSION="${{ steps.build-meta.outputs.app_version }}"
+          APP_BUILD_SHA="${{ steps.build-meta.outputs.build_sha }}"
+          APP_BUILD_TIME="${{ steps.build-meta.outputs.build_time }}"
+
           # Create a temporary task definition with the new image and current values
           cat > temp-taskdef.json << EOF
           {
@@ -96,8 +121,8 @@ jobs:
             "taskRoleArn": "arn:aws:iam::239408179735:role/bhashamitra-ecs-task-role",
             "containerDefinitions": [
               {
-                "name": "bhashamitra-app",
-                "image": "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG",
+                "name": "${{ env.CONTAINER_NAME }}",
+                "image": "$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG",
                 "portMappings": [
                   {
                     "containerPort": 8080,
@@ -142,6 +167,18 @@ jobs:
                     "value": "production"
                   },
                   {
+                    "name": "APP_VERSION",
+                    "value": "${APP_VERSION}"
+                  },
+                  {
+                    "name": "APP_BUILD_SHA",
+                    "value": "${APP_BUILD_SHA}"
+                  },
+                  {
+                    "name": "APP_BUILD_TIME",
+                    "value": "${APP_BUILD_TIME}"
+                  },
+                  {
                     "name": "COGNITO_CLIENT_ID",
                     "value": "${COGNITO_CLIENT_ID}"
                   },
@@ -155,14 +192,14 @@ jobs:
                   },
                   {
                     "name": "AWS_REGION",
-                    "value": "us-west-1"
+                    "value": "${{ env.AWS_REGION }}"
                   }
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
                     "awslogs-group": "/ecs/bhashamitra",
-                    "awslogs-region": "us-west-1",
+                    "awslogs-region": "${{ env.AWS_REGION }}",
                     "awslogs-stream-prefix": "ecs"
                   }
                 },
@@ -172,7 +209,7 @@ jobs:
           }
           EOF
           echo "task-definition=temp-taskdef.json" >> $GITHUB_OUTPUT
-      
+
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
@@ -180,17 +217,17 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-      
+
       - name: Verify deployment
         run: |
           set -euo pipefail
           echo "🎉 Deployment completed successfully!"
           echo "Application URL: https://bhashamitra.com/"
           echo "Image deployed: ${{ steps.build-image.outputs.image }}"
-          
+
           # Wait a moment for health checks
           sleep 30
-          
+
           # Check service status
           aws ecs describe-services \
             --cluster ${{ env.ECS_CLUSTER }} \
