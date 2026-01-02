@@ -81,6 +81,9 @@ jobs:
           # Get Cognito Client ID using the User Pool ID
           COGNITO_CLIENT_ID=$(aws cognito-idp list-user-pool-clients --user-pool-id "$COGNITO_USER_POOL_ID" --query 'UserPoolClients[0].ClientId' --output text)
           
+          # Get S3 bucket name from Terraform outputs (or use hardcoded value)
+          S3_AUDIO_BUCKET_NAME="bhashamitra-audio-prod"
+          
           # Create a temporary task definition with the new image and current values
           cat > temp-taskdef.json << EOF
           {
@@ -145,6 +148,14 @@ jobs:
                   {
                     "name": "COGNITO_USER_POOL_ID",
                     "value": "${COGNITO_USER_POOL_ID}"
+                  },
+                  {
+                    "name": "S3_AUDIO_BUCKET_NAME",
+                    "value": "${S3_AUDIO_BUCKET_NAME}"
+                  },
+                  {
+                    "name": "AWS_REGION",
+                    "value": "us-west-1"
                   }
                 ],
                 "logConfiguration": {
