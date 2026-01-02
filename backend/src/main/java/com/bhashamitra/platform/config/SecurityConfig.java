@@ -24,6 +24,12 @@ public class SecurityConfig {
                         // Actuator
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
 
+                        // Public read APIs
+                        .requestMatchers("/api/public/**").permitAll()
+
+                        // Admin/editor APIs
+                        .requestMatchers("/api/admin/**").hasAnyRole("admin", "editor")
+
                         // APIs require login
                         .requestMatchers("/api/**").authenticated()
 

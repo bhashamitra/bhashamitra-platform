@@ -9,43 +9,59 @@
     <changeSet author="satish" id="001-create-languages">
 
         <createTable tableName="languages">
+            <column name="id" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
             <!-- ISO 639-1 code: mr, hi, gu, ta -->
             <column name="code" type="VARCHAR(10)">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints nullable="false"/>
             </column>
 
             <column name="name" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
 
-            <!-- e.g., Devanagari, Gujarati, Tamil -->
             <column name="script" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
 
-            <!-- e.g., "learners-phonetic-v1", "iast", etc. -->
             <column name="transliteration_scheme" type="VARCHAR(50)"/>
 
             <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
 
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="created_date" type="TIMESTAMP" defaultValueComputed="NOW()">
                 <constraints nullable="false"/>
             </column>
+
             <column name="created_by" type="VARCHAR(125)" defaultValue="system">
                 <constraints nullable="false"/>
             </column>
+
             <column name="last_modified_date" type="TIMESTAMP" defaultValueComputed="NOW()">
                 <constraints nullable="false"/>
             </column>
+
             <column name="last_modified_by" type="VARCHAR(125)" defaultValue="system">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
+        <!-- Enforce uniqueness of ISO code -->
+        <addUniqueConstraint
+                tableName="languages"
+                columnNames="code"
+                constraintName="uk_languages_code"/>
+
         <!-- Seed a few languages -->
         <insert tableName="languages">
+            <column name="id" value="11111111-1111-1111-1111-111111111111"/>
             <column name="code" value="mr"/>
             <column name="name" value="Marathi"/>
             <column name="script" value="Devanagari"/>
@@ -53,6 +69,7 @@
         </insert>
 
         <insert tableName="languages">
+            <column name="id" value="22222222-2222-2222-2222-222222222222"/>
             <column name="code" value="hi"/>
             <column name="name" value="Hindi"/>
             <column name="script" value="Devanagari"/>
@@ -60,6 +77,7 @@
         </insert>
 
         <insert tableName="languages">
+            <column name="id" value="33333333-3333-3333-3333-333333333333"/>
             <column name="code" value="gu"/>
             <column name="name" value="Gujarati"/>
             <column name="script" value="Gujarati"/>
@@ -67,6 +85,7 @@
         </insert>
 
         <insert tableName="languages">
+            <column name="id" value="44444444-4444-4444-4444-444444444444"/>
             <column name="code" value="ta"/>
             <column name="name" value="Tamil"/>
             <column name="script" value="Tamil"/>

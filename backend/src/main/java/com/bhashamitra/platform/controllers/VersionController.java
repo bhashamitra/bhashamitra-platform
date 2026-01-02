@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class VersionController {
 
-    @GetMapping("/api/version")
+    @GetMapping("/api/public/version")
     public Map<String, Object> version() {
         return Map.of(
                 "name", "bhashamitra platform",
