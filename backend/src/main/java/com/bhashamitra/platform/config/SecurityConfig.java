@@ -10,37 +10,27 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            CognitoLogoutSuccessHandler logoutSuccessHandler) throws Exception {
         http
-                // CSRF off for APIs (ok for now)
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+                // CSRF off for APIs; also ignore /logout so logout works without CSRF token plumbing
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/logout"))
 
                 .authorizeHttpRequests(auth -> auth
-                        // React + static
-                        .requestMatchers(
-                                "/", "/index.html", "/assets/**", "/favicon.ico"
-                        ).permitAll()
-
-                        // Actuator
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
-
-                        // Public read APIs
                         .requestMatchers("/api/public/**").permitAll()
-
-                        // Admin/editor APIs
                         .requestMatchers("/api/admin/**").hasAnyRole("admin", "editor")
-
-                        // APIs require login
                         .requestMatchers("/api/**").authenticated()
-
-                        // SPA routes
                         .anyRequest().permitAll()
                 )
 
-                // This is what enables Cognito login
                 .oauth2Login(Customizer.withDefaults())
 
-                .logout(Customizer.withDefaults());
+                .logout(logout -> logout
+                        .logoutUrl("/logout")          // default, but explicit is clearer
+                        .logoutSuccessHandler(logoutSuccessHandler)
+                );
 
         return http.build();
     }
