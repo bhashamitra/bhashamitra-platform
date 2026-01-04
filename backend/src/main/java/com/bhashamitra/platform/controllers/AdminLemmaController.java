@@ -6,6 +6,8 @@ import com.bhashamitra.platform.controllers.dto.UpdateLemmaRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.services.LemmaService;
+import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
+import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -64,7 +66,7 @@ public class AdminLemmaController {
     public ResponseEntity<LemmaDto> create(@Valid @RequestBody CreateLemmaRequest req, Authentication auth) {
         String actor = actor(auth);
 
-        LemmaService.LemmaCreateRequest svcReq = new LemmaService.LemmaCreateRequest(
+        LemmaCreateRequest svcReq = new LemmaCreateRequest(
                 req.language(),
                 req.lemmaNative(),
                 req.lemmaLatin(),
@@ -91,7 +93,7 @@ public class AdminLemmaController {
                                            Authentication auth) {
         String actor = actor(auth);
 
-        LemmaService.LemmaUpdateRequest svcReq = new LemmaService.LemmaUpdateRequest(
+        LemmaUpdateRequest svcReq = new LemmaUpdateRequest(
                 null, // language: keep null unless you want to allow changing it
                 req.lemmaNative(),
                 req.lemmaLatin(),

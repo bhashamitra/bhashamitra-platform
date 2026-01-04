@@ -3,6 +3,8 @@ package com.bhashamitra.platform.services;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
+import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
+import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -263,25 +265,4 @@ public class LemmaService {
         String out = s.trim();
         return out.isEmpty() ? null : out;
     }
-
-    // =========================================================
-    // DTO placeholders (rename to your actual DTO classes)
-    // =========================================================
-
-    public record LemmaCreateRequest(
-            String language,
-            String lemmaNative,
-            String lemmaLatin,
-            String pos,
-            String notes,
-            LemmaStatus status
-    ) {}
-
-    public record LemmaUpdateRequest(
-            String language,
-            String lemmaNative,
-            String lemmaLatin,
-            String pos,
-            String notes
-    ) {}
 }
