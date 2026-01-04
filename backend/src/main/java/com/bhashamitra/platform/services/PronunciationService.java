@@ -1,7 +1,6 @@
 package com.bhashamitra.platform.services;
 
 import com.bhashamitra.platform.models.Pronunciation;
-import com.bhashamitra.platform.models.UsageSentenceStatus;
 import com.bhashamitra.platform.repositories.PronunciationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

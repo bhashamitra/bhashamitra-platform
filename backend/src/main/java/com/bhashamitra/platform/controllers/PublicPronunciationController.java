@@ -4,7 +4,10 @@ import com.bhashamitra.platform.controllers.dto.PronunciationDto;
 import com.bhashamitra.platform.models.Pronunciation;
 import com.bhashamitra.platform.services.PronunciationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
