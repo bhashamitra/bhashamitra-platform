@@ -633,6 +633,310 @@ class LemmaServiceTest {
     // =========================================================
 
     @Test
+    @DisplayName("listByLanguage - Should return single lemma when only one exists")
+    void listByLanguage_ShouldReturnSingleLemmaWhenOnlyOneExists() {
+        // Given
+        String language = "mr";
+        List<Lemma> singleLemma = Arrays.asList(sampleLemma);
+        
+        when(languageService.isLanguageEnabled(language)).thenReturn(true);
+        when(lemmaRepository.findByLanguageOrderByLemmaNativeAsc(language)).thenReturn(singleLemma);
+
+        // When
+        List<Lemma> result = lemmaService.listByLanguage(language);
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals(sampleLemma, result.get(0));
+        verify(languageService).isLanguageEnabled(language);
+        verify(lemmaRepository).findByLanguageOrderByLemmaNativeAsc(language);
+    }
+
+    @Test
+    @DisplayName("listByLanguage - Should return empty list when no lemmas exist for enabled language")
+    void listByLanguage_ShouldReturnEmptyListWhenNoLemmasExistForEnabledLanguage() {
+        // Given
+        String language = "gu"; // Gujarati - enabled but no lemmas
+        List<Lemma> emptyLemmas = Arrays.asList();
+        
+        when(languageService.isLanguageEnabled(language)).thenReturn(true);
+        when(lemmaRepository.findByLanguageOrderByLemmaNativeAsc(language)).thenReturn(emptyLemmas);
+
+        // When
+        List<Lemma> result = lemmaService.listByLanguage(language);
+
+        // Then
+        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
+        verify(languageService).isLanguageEnabled(language);
+        verify(lemmaRepository).findByLanguageOrderByLemmaNativeAsc(language);
+    }
+
+    @Test
+    @DisplayName("Multiple languages scenario - Should handle mixed enabled/disabled languages correctly")
+    void multipleLanguagesScenario_ShouldHandleMixedEnabledDisabledLanguagesCorrectly() {
+        // Given - Setup multiple lemmas for different languages
+        Lemma marathiLemma = new Lemma();
+        marathiLemma.setLanguage("mr");
+        marathiLemma.setLemmaNative("नमस्कार");
+        marathiLemma.setStatus(LemmaStatus.PUBLISHED);
+
+        Lemma hindiLemma = new Lemma();
+        hindiLemma.setLanguage("hi");
+        hindiLemma.setLemmaNative("नमस्ते");
+        hindiLemma.setStatus(LemmaStatus.PUBLISHED);
+
+        Lemma gujaratiLemma = new Lemma();
+        gujaratiLemma.setLanguage("gu");
+        gujaratiLemma.setLemmaNative("નમસ્તે");
+        gujaratiLemma.setStatus(LemmaStatus.PUBLISHED);
+
+        // Setup language enablement: mr=enabled, hi=enabled, gu=disabled
+        when(languageService.isLanguageEnabled("mr")).thenReturn(true);
+        when(languageService.isLanguageEnabled("hi")).thenReturn(true);
+        when(languageService.isLanguageEnabled("gu")).thenReturn(false);
+
+        // Setup repository responses
+        when(lemmaRepository.findByLanguageOrderByLemmaNativeAsc("mr"))
+                .thenReturn(Arrays.asList(marathiLemma));
+        when(lemmaRepository.findByLanguageOrderByLemmaNativeAsc("hi"))
+                .thenReturn(Arrays.asList(hindiLemma));
+
+        // When & Then - Test enabled languages work
+        List<Lemma> marathiResult = lemmaService.listByLanguage("mr");
+        assertEquals(1, marathiResult.size());
+        assertEquals("नमस्कार", marathiResult.get(0).getLemmaNative());
+
+        List<Lemma> hindiResult = lemmaService.listByLanguage("hi");
+        assertEquals(1, hindiResult.size());
+        assertEquals("नमस्ते", hindiResult.get(0).getLemmaNative());
+
+        // When & Then - Test disabled language throws exception
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.listByLanguage("gu")
+        );
+        assertEquals("Language is not enabled or not found: gu", exception.getMessage());
+
+        // Verify repository was never called for disabled language
+        verify(lemmaRepository, never()).findByLanguageOrderByLemmaNativeAsc("gu");
+    }
+
+    @Test
+    @DisplayName("All languages disabled scenario - Should reject all requests even if lemmas exist")
+    void allLanguagesDisabledScenario_ShouldRejectAllRequestsEvenIfLemmasExist() {
+        // Given - All languages are disabled but lemmas exist in database
+        when(languageService.isLanguageEnabled("mr")).thenReturn(false);
+        when(languageService.isLanguageEnabled("hi")).thenReturn(false);
+        when(languageService.isLanguageEnabled("gu")).thenReturn(false);
+        when(languageService.isLanguageEnabled("ta")).thenReturn(false);
+
+        String[] disabledLanguages = {"mr", "hi", "gu", "ta"};
+
+        // When & Then - All languages should be rejected
+        for (String language : disabledLanguages) {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                    lemmaService.listByLanguage(language)
+            );
+            assertEquals("Language is not enabled or not found: " + language, exception.getMessage());
+            
+            // Verify repository is never called for any disabled language
+            verify(lemmaRepository, never()).findByLanguageOrderByLemmaNativeAsc(language);
+        }
+
+        // Verify language service was called for each language
+        verify(languageService).isLanguageEnabled("mr");
+        verify(languageService).isLanguageEnabled("hi");
+        verify(languageService).isLanguageEnabled("gu");
+        verify(languageService).isLanguageEnabled("ta");
+    }
+
+    @Test
+    @DisplayName("listPublishedByLanguage - Should handle mixed status scenarios correctly")
+    void listPublishedByLanguage_ShouldHandleMixedStatusScenariosCorrectly() {
+        // Given - Multiple lemmas with different statuses for same language
+        Lemma publishedLemma1 = new Lemma();
+        publishedLemma1.setLemmaNative("नमस्कार");
+        publishedLemma1.setStatus(LemmaStatus.PUBLISHED);
+
+        Lemma publishedLemma2 = new Lemma();
+        publishedLemma2.setLemmaNative("धन्यवाद");
+        publishedLemma2.setStatus(LemmaStatus.PUBLISHED);
+
+        // Only published lemmas should be returned
+        List<Lemma> publishedLemmas = Arrays.asList(publishedLemma1, publishedLemma2);
+        
+        when(languageService.isLanguageEnabled("mr")).thenReturn(true);
+        when(lemmaRepository.findByLanguageAndStatusOrderByLemmaNativeAsc("mr", LemmaStatus.PUBLISHED))
+                .thenReturn(publishedLemmas);
+
+        // When
+        List<Lemma> result = lemmaService.listPublishedByLanguage("mr");
+
+        // Then
+        assertEquals(2, result.size());
+        assertEquals("नमस्कार", result.get(0).getLemmaNative());
+        assertEquals("धन्यवाद", result.get(1).getLemmaNative());
+        
+        // Verify only published status was queried
+        verify(lemmaRepository).findByLanguageAndStatusOrderByLemmaNativeAsc("mr", LemmaStatus.PUBLISHED);
+        verify(lemmaRepository, never()).findByLanguageAndStatusOrderByLemmaNativeAsc(eq("mr"), eq(LemmaStatus.DRAFT));
+        verify(lemmaRepository, never()).findByLanguageAndStatusOrderByLemmaNativeAsc(eq("mr"), eq(LemmaStatus.REVIEW));
+    }
+
+    @Test
+    @DisplayName("create - Should handle creating lemmas for different enabled languages")
+    void create_ShouldHandleCreatingLemmasForDifferentEnabledLanguages() {
+        // Given - Multiple create requests for different languages
+        LemmaCreateRequest marathiRequest = new LemmaCreateRequest(
+                "mr", "नमस्कार", "namaskar", "noun", "Greeting", null
+        );
+        
+        LemmaCreateRequest hindiRequest = new LemmaCreateRequest(
+                "hi", "नमस्ते", "namaste", "noun", "Greeting", null
+        );
+
+        String actor = "admin@example.com";
+        
+        // Setup language enablement
+        when(languageService.isLanguageEnabled("mr")).thenReturn(true);
+        when(languageService.isLanguageEnabled("hi")).thenReturn(true);
+        when(lemmaRepository.existsByLanguageAndLemmaNative("mr", "नमस्कार")).thenReturn(false);
+        when(lemmaRepository.existsByLanguageAndLemmaNative("hi", "नमस्ते")).thenReturn(false);
+        when(lemmaRepository.save(any(Lemma.class))).thenReturn(sampleLemma);
+
+        // When - Create lemmas for both languages
+        lemmaService.create(marathiRequest, actor);
+        lemmaService.create(hindiRequest, actor);
+
+        // Then - Verify both languages were validated and lemmas saved
+        verify(languageService).isLanguageEnabled("mr");
+        verify(languageService).isLanguageEnabled("hi");
+        verify(lemmaRepository, times(2)).save(any(Lemma.class));
+        verify(auditService, times(2)).record(eq("LEMMA"), any(String.class), eq("LEMMA_CREATED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("create - Should reject creation for disabled language even if similar enabled language exists")
+    void create_ShouldRejectCreationForDisabledLanguageEvenIfSimilarEnabledLanguageExists() {
+        // Given - mr is enabled, but mr-IN (regional variant) is disabled
+        LemmaCreateRequest disabledLanguageRequest = new LemmaCreateRequest(
+                "mr-IN", "नमस्कार", "namaskar", "noun", "Greeting", null
+        );
+
+        String actor = "admin@example.com";
+        
+        // Only mock the language that will actually be checked
+        when(languageService.isLanguageEnabled("mr-IN")).thenReturn(false);
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.create(disabledLanguageRequest, actor)
+        );
+        assertEquals("Language is not enabled or not found: mr-IN", exception.getMessage());
+        
+        verify(languageService).isLanguageEnabled("mr-IN");
+        verify(languageService, never()).isLanguageEnabled("mr"); // Should not check similar language
+        verify(lemmaRepository, never()).existsByLanguageAndLemmaNative(any(), any());
+        verify(lemmaRepository, never()).save(any());
+        verify(auditService, never()).record(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("getPublishedById - Should work correctly when single published lemma exists")
+    void getPublishedById_ShouldWorkCorrectlyWhenSinglePublishedLemmaExists() {
+        // Given
+        String id = "lemma-123";
+        sampleLemma.setStatus(LemmaStatus.PUBLISHED);
+        when(lemmaRepository.findByIdAndStatus(id, LemmaStatus.PUBLISHED)).thenReturn(Optional.of(sampleLemma));
+
+        // When
+        Lemma result = lemmaService.getPublishedById(id);
+
+        // Then
+        assertEquals(sampleLemma, result);
+        assertEquals(LemmaStatus.PUBLISHED, result.getStatus());
+        verify(lemmaRepository).findByIdAndStatus(id, LemmaStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("Language validation consistency - Should apply same validation across all methods")
+    void languageValidationConsistency_ShouldApplySameValidationAcrossAllMethods() {
+        // Given - A disabled language
+        String disabledLanguage = "disabled-lang";
+        when(languageService.isLanguageEnabled(disabledLanguage)).thenReturn(false);
+
+        // When & Then - All methods should consistently reject disabled language
+        
+        // Test listByLanguage
+        IllegalArgumentException exception1 = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.listByLanguage(disabledLanguage)
+        );
+        assertEquals("Language is not enabled or not found: disabled-lang", exception1.getMessage());
+
+        // Test listByLanguageAndStatus
+        IllegalArgumentException exception2 = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.listByLanguageAndStatus(disabledLanguage, LemmaStatus.DRAFT)
+        );
+        assertEquals("Language is not enabled or not found: disabled-lang", exception2.getMessage());
+
+        // Test listPublishedByLanguage
+        IllegalArgumentException exception3 = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.listPublishedByLanguage(disabledLanguage)
+        );
+        assertEquals("Language is not enabled or not found: disabled-lang", exception3.getMessage());
+
+        // Test create
+        LemmaCreateRequest createRequest = new LemmaCreateRequest(
+                disabledLanguage, "Test lemma", null, null, null, null
+        );
+        IllegalArgumentException exception4 = assertThrows(IllegalArgumentException.class, () ->
+                lemmaService.create(createRequest, "actor")
+        );
+        assertEquals("Language is not enabled or not found: disabled-lang", exception4.getMessage());
+
+        // Verify language service was called for each method
+        verify(languageService, times(4)).isLanguageEnabled(disabledLanguage);
+        
+        // Verify no repository calls were made
+        verify(lemmaRepository, never()).findByLanguageOrderByLemmaNativeAsc(any());
+        verify(lemmaRepository, never()).findByLanguageAndStatusOrderByLemmaNativeAsc(any(), any());
+        verify(lemmaRepository, never()).existsByLanguageAndLemmaNative(any(), any());
+        verify(lemmaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Uniqueness validation - Should handle cross-language uniqueness correctly")
+    void uniquenessValidation_ShouldHandleCrossLanguageUniquenessCorrectly() {
+        // Given - Same lemma native text exists in different languages (should be allowed)
+        LemmaCreateRequest marathiRequest = new LemmaCreateRequest(
+                "mr", "नमस्कार", "namaskar", "noun", "Marathi greeting", null
+        );
+        
+        LemmaCreateRequest hindiRequest = new LemmaCreateRequest(
+                "hi", "नमस्कार", "namaskar", "noun", "Hindi greeting", null
+        );
+
+        String actor = "admin@example.com";
+        
+        // Setup - Both languages enabled, no duplicates within same language
+        when(languageService.isLanguageEnabled("mr")).thenReturn(true);
+        when(languageService.isLanguageEnabled("hi")).thenReturn(true);
+        when(lemmaRepository.existsByLanguageAndLemmaNative("mr", "नमस्कार")).thenReturn(false);
+        when(lemmaRepository.existsByLanguageAndLemmaNative("hi", "नमस्कार")).thenReturn(false);
+        when(lemmaRepository.save(any(Lemma.class))).thenReturn(sampleLemma);
+
+        // When - Create same lemma text for different languages
+        lemmaService.create(marathiRequest, actor);
+        lemmaService.create(hindiRequest, actor);
+
+        // Then - Both should succeed (uniqueness is per language, not global)
+        verify(lemmaRepository).existsByLanguageAndLemmaNative("mr", "नमस्कार");
+        verify(lemmaRepository).existsByLanguageAndLemmaNative("hi", "नमस्कार");
+        verify(lemmaRepository, times(2)).save(any(Lemma.class));
+        verify(auditService, times(2)).record(eq("LEMMA"), any(String.class), eq("LEMMA_CREATED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
     @DisplayName("create - Should handle Unicode content correctly")
     void create_ShouldHandleUnicodeContentCorrectly() {
         // Given
