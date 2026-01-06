@@ -1,0 +1,905 @@
+package com.bhashamitra.platform.services;
+
+import com.bhashamitra.platform.models.Lemma;
+import com.bhashamitra.platform.models.LemmaStatus;
+import com.bhashamitra.platform.models.Pronunciation;
+import com.bhashamitra.platform.models.UsageSentence;
+import com.bhashamitra.platform.models.UsageSentenceStatus;
+import com.bhashamitra.platform.repositories.PronunciationRepository;
+import com.bhashamitra.platform.services.PronunciationService.CreateRequest;
+import com.bhashamitra.platform.services.PronunciationService.UpdateRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("PronunciationService Tests")
+class PronunciationServiceTest {
+
+    @Mock
+    private PronunciationRepository pronunciationRepository;
+
+    @Mock
+    private LemmaService lemmaService;
+
+    @Mock
+    private UsageSentenceService usageSentenceService;
+
+    @Mock
+    private AuditService auditService;
+
+    @InjectMocks
+    private PronunciationService pronunciationService;
+
+    private Pronunciation samplePronunciation;
+    private Lemma sampleLemma;
+    private UsageSentence sampleSentence;
+
+    @BeforeEach
+    void setUp() {
+        // Setup sample lemma
+        sampleLemma = new Lemma();
+        sampleLemma.setLanguage("mr");
+        sampleLemma.setLemmaNative("नमस्कार");
+        sampleLemma.setLemmaLatin("namaskar");
+        sampleLemma.setPos("noun");
+        sampleLemma.setStatus(LemmaStatus.PUBLISHED);
+
+        // Setup sample usage sentence
+        sampleSentence = new UsageSentence();
+        sampleSentence.setLanguage("mr");
+        sampleSentence.setSentenceNative("मी तुम्हाला नमस्कार करतो.");
+        sampleSentence.setSentenceLatin("Mi tumhala namaskar karto.");
+        sampleSentence.setTranslation("I greet you.");
+        sampleSentence.setStatus(UsageSentenceStatus.PUBLISHED);
+
+        // Setup sample pronunciation
+        samplePronunciation = new Pronunciation();
+        samplePronunciation.setOwnerType("LEMMA");
+        samplePronunciation.setOwnerId("lemma-123");
+        samplePronunciation.setSpeaker("Native Speaker");
+        samplePronunciation.setRegion("Maharashtra");
+        samplePronunciation.setAudioUri("s3://bhashamitra-audio/lemma-123-pronunciation.mp3");
+        samplePronunciation.setDurationMs(2500);
+        samplePronunciation.setCreatedBy("admin@example.com");
+        samplePronunciation.setLastModifiedBy("admin@example.com");
+    }
+
+    // =========================================================
+    // getById Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("getById - Should return pronunciation when found")
+    void getById_ShouldReturnPronunciationWhenFound() {
+        // Given
+        String id = "pronunciation-123";
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.of(samplePronunciation));
+
+        // When
+        Pronunciation result = pronunciationService.getById(id);
+
+        // Then
+        assertEquals(samplePronunciation, result);
+        verify(pronunciationRepository).findById(id);
+    }
+
+    @Test
+    @DisplayName("getById - Should throw IllegalArgumentException when not found")
+    void getById_ShouldThrowIllegalArgumentExceptionWhenNotFound() {
+        // Given
+        String id = "nonexistent";
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.empty());
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.getById(id)
+        );
+        assertEquals("Pronunciation not found: nonexistent", exception.getMessage());
+        verify(pronunciationRepository).findById(id);
+    }
+
+    // =========================================================
+    // listByOwner Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("listByOwner - Should return pronunciations for valid owner")
+    void listByOwner_ShouldReturnPronunciationsForValidOwner() {
+        // Given
+        String ownerType = "LEMMA";
+        String ownerId = "lemma-123";
+        List<Pronunciation> expectedPronunciations = Arrays.asList(samplePronunciation);
+        
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123"))
+                .thenReturn(expectedPronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listByOwner(ownerType, ownerId);
+
+        // Then
+        assertEquals(expectedPronunciations, result);
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123");
+    }
+
+    @Test
+    @DisplayName("listByOwner - Should normalize owner type to uppercase")
+    void listByOwner_ShouldNormalizeOwnerTypeToUppercase() {
+        // Given
+        String ownerType = "lemma"; // lowercase
+        String ownerId = "lemma-123";
+        List<Pronunciation> expectedPronunciations = Arrays.asList(samplePronunciation);
+        
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123"))
+                .thenReturn(expectedPronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listByOwner(ownerType, ownerId);
+
+        // Then
+        assertEquals(expectedPronunciations, result);
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123");
+    }
+
+    @Test
+    @DisplayName("listByOwner - Should throw exception for null owner type")
+    void listByOwner_ShouldThrowExceptionForNullOwnerType() {
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listByOwner(null, "lemma-123")
+        );
+        assertEquals("ownerType must be provided", exception.getMessage());
+        verify(pronunciationRepository, never()).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc(any(), any());
+    }
+
+    @Test
+    @DisplayName("listByOwner - Should throw exception for null owner ID")
+    void listByOwner_ShouldThrowExceptionForNullOwnerId() {
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listByOwner("LEMMA", null)
+        );
+        assertEquals("ownerId must be provided", exception.getMessage());
+        verify(pronunciationRepository, never()).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc(any(), any());
+    }
+
+    @Test
+    @DisplayName("listByOwner - Should return empty list when no pronunciations exist")
+    void listByOwner_ShouldReturnEmptyListWhenNoPronunciationsExist() {
+        // Given
+        String ownerType = "LEMMA";
+        String ownerId = "lemma-no-pronunciations";
+        List<Pronunciation> emptyPronunciations = Arrays.asList();
+        
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-no-pronunciations"))
+                .thenReturn(emptyPronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listByOwner(ownerType, ownerId);
+
+        // Then
+        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-no-pronunciations");
+    }
+
+    // =========================================================
+    // create Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("create - Should create pronunciation for lemma successfully")
+    void create_ShouldCreatePronunciationForLemmaSuccessfully() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "lemma-123", "Native Speaker", "Maharashtra", 
+                "s3://bhashamitra-audio/lemma-123.mp3", 2500
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://bhashamitra-audio/lemma-123.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        Pronunciation result = pronunciationService.create(request, actor);
+
+        // Then
+        assertEquals(samplePronunciation, result);
+        
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("LEMMA", capturedPronunciation.getOwnerType());
+        assertEquals("lemma-123", capturedPronunciation.getOwnerId());
+        assertEquals("Native Speaker", capturedPronunciation.getSpeaker());
+        assertEquals("Maharashtra", capturedPronunciation.getRegion());
+        assertEquals("s3://bhashamitra-audio/lemma-123.mp3", capturedPronunciation.getAudioUri());
+        assertEquals(2500, capturedPronunciation.getDurationMs());
+        assertEquals(actor, capturedPronunciation.getCreatedBy());
+        assertEquals(actor, capturedPronunciation.getLastModifiedBy());
+
+        verify(auditService).record(eq("PRONUNCIATION"), any(String.class), eq("PRONUNCIATION_CREATED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("create - Should create pronunciation for sentence successfully")
+    void create_ShouldCreatePronunciationForSentenceSuccessfully() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "SENTENCE", "sentence-123", "Native Speaker", "Mumbai", 
+                "s3://bhashamitra-audio/sentence-123.mp3", 3000
+        );
+        String actor = "admin@example.com";
+        
+        samplePronunciation.setOwnerType("SENTENCE");
+        samplePronunciation.setOwnerId("sentence-123");
+        
+        when(usageSentenceService.getById("sentence-123")).thenReturn(sampleSentence);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("SENTENCE", "sentence-123", "s3://bhashamitra-audio/sentence-123.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        Pronunciation result = pronunciationService.create(request, actor);
+
+        // Then
+        assertEquals(samplePronunciation, result);
+        verify(usageSentenceService).getById("sentence-123");
+        verify(lemmaService, never()).getById(any());
+        
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("SENTENCE", capturedPronunciation.getOwnerType());
+        assertEquals("sentence-123", capturedPronunciation.getOwnerId());
+    }
+
+    @Test
+    @DisplayName("create - Should normalize owner type to uppercase")
+    void create_ShouldNormalizeOwnerTypeToUppercase() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "lemma", "lemma-123", "Native Speaker", "Maharashtra", 
+                "s3://bhashamitra-audio/lemma-123.mp3", 2500
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://bhashamitra-audio/lemma-123.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        pronunciationService.create(request, actor);
+
+        // Then
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("LEMMA", capturedPronunciation.getOwnerType());
+    }
+
+    @Test
+    @DisplayName("create - Should normalize and trim input fields")
+    void create_ShouldNormalizeAndTrimInputFields() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "  LEMMA  ", "  lemma-123  ", "  Native Speaker  ", "  Maharashtra  ", 
+                "  s3://bhashamitra-audio/lemma-123.mp3  ", 2500
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://bhashamitra-audio/lemma-123.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        pronunciationService.create(request, actor);
+
+        // Then
+        verify(lemmaService).getById("lemma-123");
+        verify(pronunciationRepository).existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://bhashamitra-audio/lemma-123.mp3");
+        
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("LEMMA", capturedPronunciation.getOwnerType());
+        assertEquals("lemma-123", capturedPronunciation.getOwnerId());
+        assertEquals("Native Speaker", capturedPronunciation.getSpeaker());
+        assertEquals("Maharashtra", capturedPronunciation.getRegion());
+        assertEquals("s3://bhashamitra-audio/lemma-123.mp3", capturedPronunciation.getAudioUri());
+    }
+
+    @Test
+    @DisplayName("create - Should convert empty strings to null for optional fields")
+    void create_ShouldConvertEmptyStringsToNullForOptionalFields() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "lemma-123", "   ", "   ", 
+                "s3://bhashamitra-audio/lemma-123.mp3", null
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://bhashamitra-audio/lemma-123.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        pronunciationService.create(request, actor);
+
+        // Then
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertNull(capturedPronunciation.getSpeaker());
+        assertNull(capturedPronunciation.getRegion());
+        assertNull(capturedPronunciation.getDurationMs());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for null owner type")
+    void create_ShouldThrowExceptionForNullOwnerType() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                null, "lemma-123", "Speaker", "Region", "s3://audio.mp3", 2500
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertEquals("ownerType must be provided", exception.getMessage());
+        verify(lemmaService, never()).getById(any());
+        verify(usageSentenceService, never()).getById(any());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for null owner ID")
+    void create_ShouldThrowExceptionForNullOwnerId() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", null, "Speaker", "Region", "s3://audio.mp3", 2500
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertEquals("ownerId must be provided", exception.getMessage());
+        verify(lemmaService, never()).getById(any());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for null audio URI")
+    void create_ShouldThrowExceptionForNullAudioUri() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "lemma-123", "Speaker", "Region", null, 2500
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertEquals("audioUri must be provided", exception.getMessage());
+        verify(lemmaService, never()).getById(any());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for unsupported owner type")
+    void create_ShouldThrowExceptionForUnsupportedOwnerType() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "UNSUPPORTED", "owner-123", "Speaker", "Region", "s3://audio.mp3", 2500
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertEquals("Unsupported ownerType: UNSUPPORTED", exception.getMessage());
+        verify(lemmaService, never()).getById(any());
+        verify(usageSentenceService, never()).getById(any());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for nonexistent lemma")
+    void create_ShouldThrowExceptionForNonexistentLemma() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "nonexistent-lemma", "Speaker", "Region", "s3://audio.mp3", 2500
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("nonexistent-lemma")).thenThrow(new IllegalArgumentException("Lemma not found: nonexistent-lemma"));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertEquals("Lemma not found: nonexistent-lemma", exception.getMessage());
+        verify(lemmaService).getById("nonexistent-lemma");
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for duplicate pronunciation")
+    void create_ShouldThrowExceptionForDuplicatePronunciation() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "lemma-123", "Speaker", "Region", "s3://existing-audio.mp3", 2500
+        );
+        String actor = "admin@example.com";
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://existing-audio.mp3"))
+                .thenReturn(true);
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(request, actor)
+        );
+        assertTrue(exception.getMessage().contains("Pronunciation already exists"));
+        verify(pronunciationRepository, never()).save(any());
+        verify(auditService, never()).record(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("create - Should handle null actor gracefully")
+    void create_ShouldHandleNullActorGracefully() {
+        // Given
+        CreateRequest request = new CreateRequest(
+                "LEMMA", "lemma-123", "Speaker", "Region", "s3://audio.mp3", 2500
+        );
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://audio.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        pronunciationService.create(request, null);
+
+        // Then
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertNull(capturedPronunciation.getCreatedBy());
+        assertNull(capturedPronunciation.getLastModifiedBy());
+    }
+
+    // =========================================================
+    // update Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("update - Should update pronunciation fields successfully")
+    void update_ShouldUpdatePronunciationFieldsSuccessfully() {
+        // Given
+        String id = "pronunciation-123";
+        UpdateRequest request = new UpdateRequest(
+                "Professional Speaker", "Pune", "s3://new-audio.mp3", 3000
+        );
+        String actor = "editor@example.com";
+        
+        Pronunciation updatedPronunciation = new Pronunciation();
+        updatedPronunciation.setOwnerType("LEMMA");
+        updatedPronunciation.setOwnerId("lemma-123");
+        updatedPronunciation.setSpeaker("Professional Speaker");
+        updatedPronunciation.setRegion("Pune");
+        updatedPronunciation.setAudioUri("s3://new-audio.mp3");
+        updatedPronunciation.setDurationMs(3000);
+        
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.of(samplePronunciation));
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(updatedPronunciation);
+
+        // When
+        Pronunciation result = pronunciationService.update(id, request, actor);
+
+        // Then
+        assertEquals(updatedPronunciation, result);
+        
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("Professional Speaker", capturedPronunciation.getSpeaker());
+        assertEquals("Pune", capturedPronunciation.getRegion());
+        assertEquals("s3://new-audio.mp3", capturedPronunciation.getAudioUri());
+        assertEquals(3000, capturedPronunciation.getDurationMs());
+        assertEquals(actor, capturedPronunciation.getLastModifiedBy());
+
+        verify(auditService).record(eq("PRONUNCIATION"), any(String.class), eq("PRONUNCIATION_UPDATED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("update - Should only update non-null fields")
+    void update_ShouldOnlyUpdateNonNullFields() {
+        // Given
+        String id = "pronunciation-123";
+        UpdateRequest request = new UpdateRequest(
+                null, "New Region", null, null
+        );
+        String actor = "editor@example.com";
+        
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.of(samplePronunciation));
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // When
+        pronunciationService.update(id, request, actor);
+
+        // Then
+        ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+        verify(pronunciationRepository).save(pronunciationCaptor.capture());
+        
+        Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+        assertEquals("Native Speaker", capturedPronunciation.getSpeaker()); // unchanged
+        assertEquals("New Region", capturedPronunciation.getRegion()); // updated
+        assertEquals("s3://bhashamitra-audio/lemma-123-pronunciation.mp3", capturedPronunciation.getAudioUri()); // unchanged
+        assertEquals(2500, capturedPronunciation.getDurationMs()); // unchanged
+    }
+
+    @Test
+    @DisplayName("update - Should throw exception for blank audio URI")
+    void update_ShouldThrowExceptionForBlankAudioUri() {
+        // Given
+        String id = "pronunciation-123";
+        UpdateRequest request = new UpdateRequest(
+                null, null, "   ", null
+        );
+        String actor = "editor@example.com";
+        
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.of(samplePronunciation));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.update(id, request, actor)
+        );
+        assertEquals("audioUri must be provided", exception.getMessage());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    // =========================================================
+    // delete Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("delete - Should delete pronunciation successfully")
+    void delete_ShouldDeletePronunciationSuccessfully() {
+        // Given
+        String id = "pronunciation-123";
+        String actor = "admin@example.com";
+        
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.of(samplePronunciation));
+
+        // When
+        pronunciationService.delete(id, actor);
+
+        // Then
+        verify(pronunciationRepository).delete(samplePronunciation);
+        verify(auditService).record(eq("PRONUNCIATION"), eq(id), eq("PRONUNCIATION_DELETED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("delete - Should throw exception for nonexistent pronunciation")
+    void delete_ShouldThrowExceptionForNonexistentPronunciation() {
+        // Given
+        String id = "nonexistent";
+        String actor = "admin@example.com";
+        
+        when(pronunciationRepository.findById(id)).thenReturn(Optional.empty());
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.delete(id, actor)
+        );
+        assertEquals("Pronunciation not found: nonexistent", exception.getMessage());
+        verify(pronunciationRepository, never()).delete(any());
+        verify(auditService, never()).record(any(), any(), any(), any(), any(), any());
+    }
+
+    // =========================================================
+    // listPublicByOwner Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("listPublicByOwner - Should return pronunciations for published lemma")
+    void listPublicByOwner_ShouldReturnPronunciationsForPublishedLemma() {
+        // Given
+        String ownerType = "LEMMA";
+        String ownerId = "lemma-123";
+        List<Pronunciation> expectedPronunciations = Arrays.asList(samplePronunciation);
+        
+        when(lemmaService.getPublishedById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123"))
+                .thenReturn(expectedPronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listPublicByOwner(ownerType, ownerId);
+
+        // Then
+        assertEquals(expectedPronunciations, result);
+        verify(lemmaService).getPublishedById("lemma-123");
+        verify(usageSentenceService, never()).getPublishedById(any());
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123");
+    }
+
+    @Test
+    @DisplayName("listPublicByOwner - Should return pronunciations for published sentence")
+    void listPublicByOwner_ShouldReturnPronunciationsForPublishedSentence() {
+        // Given
+        String ownerType = "SENTENCE";
+        String ownerId = "sentence-123";
+        samplePronunciation.setOwnerType("SENTENCE");
+        samplePronunciation.setOwnerId("sentence-123");
+        List<Pronunciation> expectedPronunciations = Arrays.asList(samplePronunciation);
+        
+        when(usageSentenceService.getPublishedById("sentence-123")).thenReturn(sampleSentence);
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("SENTENCE", "sentence-123"))
+                .thenReturn(expectedPronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listPublicByOwner(ownerType, ownerId);
+
+        // Then
+        assertEquals(expectedPronunciations, result);
+        verify(usageSentenceService).getPublishedById("sentence-123");
+        verify(lemmaService, never()).getPublishedById(any());
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("SENTENCE", "sentence-123");
+    }
+
+    @Test
+    @DisplayName("listPublicByOwner - Should throw exception for unpublished lemma")
+    void listPublicByOwner_ShouldThrowExceptionForUnpublishedLemma() {
+        // Given
+        String ownerType = "LEMMA";
+        String ownerId = "draft-lemma";
+        
+        when(lemmaService.getPublishedById("draft-lemma"))
+                .thenThrow(new IllegalArgumentException("Published lemma not found: draft-lemma"));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listPublicByOwner(ownerType, ownerId)
+        );
+        assertEquals("Published lemma not found: draft-lemma", exception.getMessage());
+        verify(lemmaService).getPublishedById("draft-lemma");
+        verify(pronunciationRepository, never()).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc(any(), any());
+    }
+
+    @Test
+    @DisplayName("listPublicByOwner - Should throw exception for unsupported owner type")
+    void listPublicByOwner_ShouldThrowExceptionForUnsupportedOwnerType() {
+        // Given
+        String ownerType = "UNSUPPORTED";
+        String ownerId = "owner-123";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listPublicByOwner(ownerType, ownerId)
+        );
+        assertEquals("Unsupported ownerType for public access: UNSUPPORTED", exception.getMessage());
+        verify(lemmaService, never()).getPublishedById(any());
+        verify(usageSentenceService, never()).getPublishedById(any());
+        verify(pronunciationRepository, never()).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc(any(), any());
+    }
+
+    // =========================================================
+    // Edge Cases and Complex Scenarios
+    // =========================================================
+
+    @Test
+    @DisplayName("Multiple pronunciations scenario - Should handle multiple pronunciations for same owner")
+    void multiplePronunciationsScenario_ShouldHandleMultiplePronunciationsForSameOwner() {
+        // Given - Multiple pronunciations for same lemma
+        Pronunciation pronunciation1 = new Pronunciation();
+        pronunciation1.setOwnerType("LEMMA");
+        pronunciation1.setOwnerId("lemma-123");
+        pronunciation1.setSpeaker("Male Speaker");
+        pronunciation1.setRegion("Mumbai");
+        pronunciation1.setAudioUri("s3://audio/male-mumbai.mp3");
+
+        Pronunciation pronunciation2 = new Pronunciation();
+        pronunciation2.setOwnerType("LEMMA");
+        pronunciation2.setOwnerId("lemma-123");
+        pronunciation2.setSpeaker("Female Speaker");
+        pronunciation2.setRegion("Pune");
+        pronunciation2.setAudioUri("s3://audio/female-pune.mp3");
+
+        List<Pronunciation> multiplePronunciations = Arrays.asList(pronunciation1, pronunciation2);
+        
+        when(pronunciationRepository.findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123"))
+                .thenReturn(multiplePronunciations);
+
+        // When
+        List<Pronunciation> result = pronunciationService.listByOwner("LEMMA", "lemma-123");
+
+        // Then
+        assertEquals(2, result.size());
+        assertEquals("Male Speaker", result.get(0).getSpeaker());
+        assertEquals("Female Speaker", result.get(1).getSpeaker());
+        assertEquals("Mumbai", result.get(0).getRegion());
+        assertEquals("Pune", result.get(1).getRegion());
+        verify(pronunciationRepository).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc("LEMMA", "lemma-123");
+    }
+
+    @Test
+    @DisplayName("Complex workflow - Should handle complete pronunciation lifecycle")
+    void complexWorkflow_ShouldHandleCompletePronunciationLifecycle() {
+        // This test demonstrates a complete workflow: create → update → delete
+        String pronunciationId = "pronunciation-123";
+        String actor = "admin@example.com";
+        
+        // 1. Create pronunciation
+        CreateRequest createRequest = new CreateRequest(
+                "LEMMA", "lemma-123", "Native Speaker", "Maharashtra", "s3://audio.mp3", 2500
+        );
+        
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri("LEMMA", "lemma-123", "s3://audio.mp3"))
+                .thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        pronunciationService.create(createRequest, actor);
+
+        // 2. Update pronunciation
+        UpdateRequest updateRequest = new UpdateRequest("Professional Speaker", "Pune", null, 3000);
+        when(pronunciationRepository.findById(pronunciationId)).thenReturn(Optional.of(samplePronunciation));
+        
+        pronunciationService.update(pronunciationId, updateRequest, actor);
+
+        // 3. Delete pronunciation
+        pronunciationService.delete(pronunciationId, actor);
+
+        // Verify all operations
+        verify(pronunciationRepository, times(2)).save(any(Pronunciation.class)); // create + update
+        verify(pronunciationRepository).delete(samplePronunciation); // delete
+        verify(auditService).record(eq("PRONUNCIATION"), any(String.class), eq("PRONUNCIATION_CREATED"), eq(actor), isNull(), any(Map.class));
+        verify(auditService).record(eq("PRONUNCIATION"), any(String.class), eq("PRONUNCIATION_UPDATED"), eq(actor), isNull(), any(Map.class));
+        verify(auditService).record(eq("PRONUNCIATION"), eq(pronunciationId), eq("PRONUNCIATION_DELETED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("Owner type normalization - Should handle case variations correctly")
+    void ownerTypeNormalization_ShouldHandleCaseVariationsCorrectly() {
+        // Given
+        String actor = "admin@example.com";
+        when(lemmaService.getById(any())).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri(any(), any(), any())).thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // Test different case variations
+        String[] ownerTypes = {"lemma", "LEMMA", "Lemma", "  lemma  ", "sentence", "SENTENCE"};
+        String[] expectedTypes = {"LEMMA", "LEMMA", "LEMMA", "LEMMA", "SENTENCE", "SENTENCE"};
+
+        for (int i = 0; i < ownerTypes.length; i++) {
+            // Reset mocks
+            reset(pronunciationRepository, lemmaService, usageSentenceService);
+            
+            if (expectedTypes[i].equals("LEMMA")) {
+                when(lemmaService.getById(any())).thenReturn(sampleLemma);
+            } else {
+                when(usageSentenceService.getById(any())).thenReturn(sampleSentence);
+            }
+            when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri(any(), any(), any())).thenReturn(false);
+            when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+            CreateRequest request = new CreateRequest(
+                    ownerTypes[i], "owner-" + i, "Speaker", "Region", "s3://audio-" + i + ".mp3", 2500
+            );
+
+            // When
+            pronunciationService.create(request, actor);
+
+            // Then
+            ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+            verify(pronunciationRepository).save(pronunciationCaptor.capture());
+            
+            Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+            assertEquals(expectedTypes[i], capturedPronunciation.getOwnerType(), 
+                    "Owner type mismatch for input: " + ownerTypes[i]);
+        }
+    }
+
+    @Test
+    @DisplayName("Validation consistency - Should apply same validation across all methods")
+    void validationConsistency_ShouldApplySameValidationAcrossAllMethods() {
+        // Test that validation is consistent across methods
+        
+        // Test listByOwner with blank owner type
+        IllegalArgumentException exception1 = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listByOwner("", "owner-123")
+        );
+        assertEquals("ownerType must be provided", exception1.getMessage());
+
+        // Test listPublicByOwner with blank owner ID
+        IllegalArgumentException exception2 = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.listPublicByOwner("LEMMA", "")
+        );
+        assertEquals("ownerId must be provided", exception2.getMessage());
+
+        // Test create with blank owner type
+        CreateRequest createRequest = new CreateRequest("", "owner-123", "Speaker", "Region", "s3://audio.mp3", 2500);
+        IllegalArgumentException exception3 = assertThrows(IllegalArgumentException.class, () ->
+                pronunciationService.create(createRequest, "actor")
+        );
+        assertEquals("ownerType must be provided", exception3.getMessage());
+
+        // Verify no repository calls were made for invalid inputs
+        verify(pronunciationRepository, never()).findByOwnerTypeAndOwnerIdOrderByCreatedDateDescIdDesc(any(), any());
+        verify(lemmaService, never()).getById(any());
+        verify(lemmaService, never()).getPublishedById(any());
+        verify(pronunciationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Audio URI handling - Should handle various URI formats correctly")
+    void audioUriHandling_ShouldHandleVariousUriFormatsCorrectly() {
+        // Given
+        String actor = "admin@example.com";
+        when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
+        when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri(any(), any(), any())).thenReturn(false);
+        when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+        // Test different URI formats
+        String[] audioUris = {
+                "s3://bhashamitra-audio/lemma-123.mp3",
+                "https://cdn.bhashamitra.org/audio/lemma-123.wav",
+                "/local/audio/lemma-123.ogg",
+                "file:///tmp/audio.mp3"
+        };
+
+        for (String audioUri : audioUris) {
+            // Reset mock
+            reset(pronunciationRepository);
+            when(pronunciationRepository.existsByOwnerTypeAndOwnerIdAndAudioUri(any(), any(), any())).thenReturn(false);
+            when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
+
+            CreateRequest request = new CreateRequest(
+                    "LEMMA", "lemma-123", "Speaker", "Region", audioUri, 2500
+            );
+
+            // When
+            pronunciationService.create(request, actor);
+
+            // Then
+            ArgumentCaptor<Pronunciation> pronunciationCaptor = ArgumentCaptor.forClass(Pronunciation.class);
+            verify(pronunciationRepository).save(pronunciationCaptor.capture());
+            
+            Pronunciation capturedPronunciation = pronunciationCaptor.getValue();
+            assertEquals(audioUri, capturedPronunciation.getAudioUri());
+        }
+    }
+}
