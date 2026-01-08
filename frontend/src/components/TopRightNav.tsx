@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 type TopRightNavProps = {
     loading: boolean;
     isEditorOrAdmin: boolean;
@@ -12,12 +14,12 @@ export default function TopRightNav({
     return (
         <div className="absolute top-4 right-4 z-10 flex gap-2">
             {!loading && isEditorOrAdmin && (
-                <a
-                    href="/admin"
-                    className="inline-flex items-center rounded-md border border-slate-200 bg-white/70 backdrop-blur px-3 py-2 text-sm font-semibold text-[var(--warriors-blue)] hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--warriors-blue)]"
+                <Link
+                    to="/admin"
+                    className="inline-flex items-center rounded-md border border-slate-200 bg-white/70 backdrop-blur px-3 py-2 text-sm font-semibold text-[var(--warriors-blue)] hover:bg-slate-50"
                 >
                     Admin
-                </a>
+                </Link>
             )}
 
             {isLoggedIn && (

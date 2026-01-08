@@ -1,13 +1,13 @@
+import { Link } from "react-router-dom";
+
 type LandingCardProps = {
     loading: boolean;
     displayName?: string;
-    onOpenPrivacy: () => void;
 };
 
 export default function LandingCard({
                                         loading,
-                                        displayName,
-                                        onOpenPrivacy,
+                                        displayName
                                     }: LandingCardProps) {
     return (
         <div className="relative z-0 flex min-h-screen items-center justify-center px-4">
@@ -38,12 +38,12 @@ export default function LandingCard({
                 </div>
 
                 <div className="mt-6 text-sm text-slate-500">
-                    <button
-                        onClick={onOpenPrivacy}
-                        className="underline hover:text-[var(--warriors-blue)]"
+                    <Link
+                        to="/privacy"
+                        className="text-sm font-semibold text-[var(--warriors-blue)] underline"
                     >
                         Privacy Policy
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
