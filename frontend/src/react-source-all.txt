@@ -1,0 +1,550 @@
+
+===== FILE: ./App.tsx =====
+
+
+import { useMe } from "./hooks/useMe";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import LandingCard from "./components/LandingCard";
+import AppShell from "./layout/AppShell";
+import { Routes, Route, Link } from "react-router-dom";
+import AdminDashboard from "./pages/AdminDashboard";
+
+export default function App() {
+    const { me, loading, isEditorOrAdmin, displayName } = useMe();
+
+    return (
+        <AppShell
+            loading={loading}
+            isEditorOrAdmin={isEditorOrAdmin}
+            isLoggedIn={!!me}
+        >
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <LandingCard
+                            loading={loading}
+                            displayName={displayName}
+                        />
+                    }
+                />
+                <Route
+                    path="/privacy"
+                    element={
+                        <div className="relative">
+                            <div className="absolute top-4 left-4 z-10">
+                                <Link
+                                    to="/"
+                                    className="text-sm font-semibold text-[var(--warriors-blue)] underline"
+                                >
+                                    ← Back
+                                </Link>
+                            </div>
+                            <PrivacyPolicy />
+                        </div>
+                    }
+                />
+
+
+                <Route path="/admin" element={<AdminDashboard />} />
+            </Routes>
+        </AppShell>
+    );
+
+}
+
+===== FILE: ./main.tsx =====
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
+    </React.StrictMode>
+);
+
+===== FILE: ./types/publicVersion.ts =====
+
+export type PublicVersion = {
+    name: string;
+    version: string;
+    build: string;
+    builtAt: string;
+};
+
+===== FILE: ./layout/AppShell.tsx =====
+
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { usePublicVersion } from "../hooks/usePublicVersion";
+
+type AppShellProps = {
+    loading: boolean;
+    isEditorOrAdmin: boolean;
+    isLoggedIn: boolean;
+    children: React.ReactNode;
+};
+
+export default function AppShell({
+                                     loading,
+                                     isEditorOrAdmin,
+                                     isLoggedIn,
+                                     children,
+                                 }: AppShellProps) {
+    const { version, loading: versionLoading } = usePublicVersion();
+
+    return (
+        <div className="min-h-screen bg-[var(--page-bg)] relative flex flex-col">
+            {/* soft background wash */}
+            <div
+                className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{
+                    background:
+                        "radial-gradient(circle at 20% 20%, var(--warriors-gold), transparent 45%), radial-gradient(circle at 80% 30%, var(--warriors-blue), transparent 50%)",
+                }}
+            />
+
+            <Header loading={loading} isEditorOrAdmin={isEditorOrAdmin} isLoggedIn={isLoggedIn} />
+
+            {/* Page content */}
+            <main className="relative z-0 flex-1">{children}</main>
+
+            <Footer version={version} loading={versionLoading} />
+        </div>
+    );
+}
+
+===== FILE: ./components/Footer.tsx =====
+
+import type { PublicVersion } from "../types/publicVersion";
+
+type FooterProps = {
+    version: PublicVersion | null;
+    loading: boolean;
+};
+
+export default function Footer({ version, loading }: FooterProps) {
+    const versionText = loading ? "Loading…" : version ? `v${version.version}` : "v—";
+
+    return (
+        <footer className="relative z-10 border-t border-slate-200 bg-white/70 backdrop-blur">
+            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 text-sm">
+        <span className="text-slate-600">
+          © {new Date().getFullYear()}{" "}
+            <span className="font-semibold text-[var(--warriors-blue)]">Bhashamitra</span>
+        </span>
+
+                <span className="font-semibold text-[var(--warriors-blue)]">{versionText}</span>
+            </div>
+        </footer>
+    );
+}
+
+===== FILE: ./components/TopRightNav.tsx =====
+
+import { Link } from "react-router-dom";
+
+type TopRightNavProps = {
+    loading: boolean;
+    isEditorOrAdmin: boolean;
+    isLoggedIn: boolean;
+};
+
+export default function TopRightNav({
+                                        loading,
+                                        isEditorOrAdmin,
+                                        isLoggedIn,
+                                    }: TopRightNavProps) {
+    return (
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+            {!loading && isEditorOrAdmin && (
+                <Link
+                    to="/admin"
+                    className="inline-flex items-center rounded-md border border-slate-200 bg-white/70 backdrop-blur px-3 py-2 text-sm font-semibold text-[var(--warriors-blue)] hover:bg-slate-50"
+                >
+                    Admin
+                </Link>
+            )}
+
+            {isLoggedIn && (
+                <a
+                    href="/logout"
+                    className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-semibold bg-white/70 backdrop-blur border-[var(--warriors-gold)] text-[var(--warriors-blue)] hover:bg-[var(--warriors-gold)]/30"
+                >
+                    Logout
+                </a>
+            )}
+        </div>
+    );
+}
+
+===== FILE: ./components/LandingCard.tsx =====
+
+import { Link } from "react-router-dom";
+
+type LandingCardProps = {
+    loading: boolean;
+    displayName?: string;
+};
+
+export default function LandingCard({
+                                        loading,
+                                        displayName
+                                    }: LandingCardProps) {
+    return (
+        <div className="relative z-0 flex min-h-screen items-center justify-center px-4">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white/80 backdrop-blur p-8 shadow-sm text-center">
+                <h1 className="text-4xl sm:text-5xl font-extrabold text-[var(--warriors-blue)]">
+                    Bhashamitra
+                </h1>
+
+                <p className="mt-4 text-base sm:text-lg text-slate-700">
+                    Indian language learning, coming soon.
+                </p>
+
+                <div className="mt-6">
+          <span className="inline-block rounded-full bg-[var(--warriors-gold)] px-5 py-2 text-sm font-semibold text-slate-900">
+            Early access coming soon
+          </span>
+                </div>
+
+                <div className="mt-6 text-sm text-slate-500">
+                    {loading ? (
+                        <span>Checking session…</span>
+                    ) : displayName ? (
+                        <span>
+              Signed in as{" "}
+                            <span className="font-semibold text-slate-700">{displayName}</span>
+            </span>
+                    ) : null}
+                </div>
+
+                <div className="mt-6 text-sm text-slate-500">
+                    <Link
+                        to="/privacy"
+                        className="text-sm font-semibold text-[var(--warriors-blue)] underline"
+                    >
+                        Privacy Policy
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+===== FILE: ./components/Header.tsx =====
+
+import { Link } from "react-router-dom";
+
+type HeaderProps = {
+    loading: boolean;
+    isEditorOrAdmin: boolean;
+    isLoggedIn: boolean;
+};
+
+export default function Header({ loading, isEditorOrAdmin, isLoggedIn }: HeaderProps) {
+    return (
+        <header className="relative z-10 border-b border-slate-200/60 bg-white/70 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+                <Link
+                    to="/"
+                    className="text-xl font-extrabold tracking-tight text-[var(--warriors-blue)]"
+                >
+                    Bhashamitra
+                </Link>
+
+                <div className="flex items-center gap-2">
+                    {!loading && isEditorOrAdmin && (
+                        <Link
+                            to="/admin"
+                            className="inline-flex items-center rounded-md border border-slate-200 bg-white/70 px-3 py-2 text-sm font-semibold text-[var(--warriors-blue)] hover:bg-slate-50"
+                        >
+                            Admin
+                        </Link>
+                    )}
+
+                    {isLoggedIn && (
+                        <a
+                            href="/logout"
+                            className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-semibold bg-white/70 border-[var(--warriors-gold)] text-[var(--warriors-blue)] hover:bg-[var(--warriors-gold)]/30"
+                        >
+                            Logout
+                        </a>
+                    )}
+                </div>
+            </div>
+        </header>
+    );
+}
+
+===== FILE: ./hooks/useMe.ts =====
+
+import { useEffect, useMemo, useState } from "react";
+
+export type MeResponse = {
+    email?: string;
+    username?: string;
+    groups?: string[];
+};
+
+export function useMe() {
+    const [me, setMe] = useState<MeResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const ac = new AbortController();
+
+        async function loadMe() {
+            try {
+                const res = await fetch("/api/me", {
+                    credentials: "include",
+                    signal: ac.signal,
+                    headers: { Accept: "application/json" },
+                });
+
+                if (!res.ok) {
+                    setMe(null);
+                    return;
+                }
+
+                const data = (await res.json()) as MeResponse;
+                setMe(data);
+            } catch (err) {
+                if ((err as any)?.name !== "AbortError") {
+                    setMe(null);
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadMe();
+        return () => ac.abort();
+    }, []);
+
+    const isEditorOrAdmin = useMemo(() => {
+        const groups = me?.groups ?? [];
+        return groups.includes("admin") || groups.includes("editor");
+    }, [me]);
+
+    const displayName =   me?.email || me?.username;
+
+    return {
+        me,
+        loading,
+        isEditorOrAdmin,
+        displayName,
+    };
+}
+
+===== FILE: ./hooks/usePublicVersion.ts =====
+
+import { useEffect, useState } from "react";
+import type { PublicVersion } from "../types/publicVersion";
+
+export function usePublicVersion() {
+    const [version, setVersion] = useState<PublicVersion | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const ac = new AbortController();
+
+        async function loadVersion() {
+            try {
+                const res = await fetch("/api/public/version", {
+                    signal: ac.signal,
+                    headers: { Accept: "application/json" },
+                });
+
+                if (!res.ok) throw new Error("Failed to load version");
+
+                const data = (await res.json()) as PublicVersion;
+                setVersion(data);
+            } catch (err: any) {
+                if (err?.name !== "AbortError") setVersion(null);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadVersion();
+        return () => ac.abort();
+    }, []);
+
+    return { version, loading };
+}
+
+===== FILE: ./pages/PrivacyPolicy.tsx =====
+
+export default function PrivacyPolicy() {
+    return (
+        <div className="min-h-screen bg-[var(--page-bg)] px-6 py-12">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-8 shadow-sm">
+                <h1 className="text-3xl font-extrabold text-[var(--warriors-blue)]">
+                    Bhashamitra Privacy Policy
+                </h1>
+
+                <p className="mt-4 text-slate-700">
+                    Bhashamitra is committed to protecting the privacy of its users. This
+                    Privacy Policy explains how we collect, use, and safeguard your
+                    information when you use our website and services.
+                </p>
+
+                <p className="mt-4 text-slate-700">
+                    Third-party websites or services that you may access through links on
+                    Bhashamitra operate under their own privacy policies. We encourage you
+                    to review the privacy policies of those third parties before providing
+                    any personal information.
+                </p>
+
+                {/* Collection */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    Collection and Use of User Information
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    When you register with Bhashamitra, we may collect personal information
+                    such as your name, email address, and other details you choose to
+                    provide through registration or account-related forms.
+                </p>
+
+                <p className="mt-3 text-slate-700">
+                    When you visit our website, we may also automatically collect certain
+                    information about your device and usage, including your IP address,
+                    browser type and version, operating system, referring URLs, and
+                    general site usage patterns.
+                </p>
+
+                <p className="mt-3 text-slate-700">
+                    We use this information to:
+                </p>
+
+                <ul className="mt-3 list-disc pl-6 text-slate-700 space-y-1">
+                    <li>Personalize content and improve user experience</li>
+                    <li>Notify you of new features, updates, or products (if you opt in)</li>
+                    <li>Communicate promotions or announcements (if you opt in)</li>
+                    <li>
+                        Ensure compatibility with commonly used browsers and operating
+                        systems
+                    </li>
+                </ul>
+
+                <p className="mt-4 text-slate-700">
+                    We may also use aggregated and anonymized information for internal
+                    research purposes, including understanding user needs, improving our
+                    services, and guiding strategic development. This information does not
+                    identify individual users.
+                </p>
+
+                {/* User Choices */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    User Choices
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    Where applicable, Bhashamitra provides you with choices regarding
+                    promotional communications. You may opt in or opt out of receiving
+                    updates, announcements, or promotional messages at any time.
+                </p>
+
+                {/* Cookies */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    Cookies
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    Cookies are small files stored on your device that help us recognize
+                    returning users and improve site functionality. Bhashamitra uses
+                    cookies to maintain session state, understand how users interact with
+                    the site, and improve overall usability.
+                </p>
+
+                <p className="mt-3 text-slate-700">
+                    You may delete or disable cookies through your browser settings.
+                    Please note that disabling cookies may affect certain features and
+                    require you to log in again during future visits.
+                </p>
+
+                <p className="mt-3 text-slate-700">
+                    You can find more information about cookies at{" "}
+                    <a
+                        href="https://www.cookiecentral.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-[var(--warriors-blue)] underline"
+                    >
+                        cookiecentral.com
+                    </a>
+                    .
+                </p>
+
+                {/* Security */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    Security
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    Bhashamitra uses reasonable administrative, technical, and
+                    organizational measures to protect personal information against
+                    unauthorized access, loss, misuse, or alteration. However, no method
+                    of transmission or storage is completely secure.
+                </p>
+
+                {/* Updates */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    Updating Your Information
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    If you have an account with Bhashamitra, you may update your personal
+                    information or communication preferences through your account
+                    settings when such functionality is available.
+                </p>
+
+                {/* Changes */}
+                <h2 className="mt-8 text-xl font-bold text-[var(--warriors-blue)]">
+                    Changes to This Policy
+                </h2>
+
+                <p className="mt-3 text-slate-700">
+                    We may update this Privacy Policy from time to time to reflect changes
+                    in legal requirements, best practices, or site functionality. Updates
+                    will be posted on this page, and we encourage you to review it
+                    periodically.
+                </p>
+
+                <p className="mt-6 text-sm text-slate-500">
+                    Last updated: {new Date().toLocaleDateString()}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+===== FILE: ./pages/AdminDashboard.tsx =====
+
+export default function AdminDashboard() {
+    return (
+        <div className="min-h-screen bg-[var(--page-bg)] px-6 py-12">
+            <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-8 shadow-sm">
+                <h1 className="text-3xl font-extrabold text-[var(--warriors-blue)]">
+                    Editorial Dashboard
+                </h1>
+
+                <p className="mt-4 text-slate-600">
+                    Editorial & admin tools coming soon.
+                </p>
+
+                <div className="mt-6 inline-block rounded-full bg-[var(--warriors-gold)]/20 px-4 py-2 text-sm font-semibold text-slate-800">
+                    Editor / Admin only
+                </div>
+            </div>
+        </div>
+    );
+}

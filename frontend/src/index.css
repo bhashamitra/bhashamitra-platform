@@ -1,11 +1,74 @@
 @import "tailwindcss";
 
+/* =========================================================
+   Design Tokens (CSS Variables)
+   ========================================================= */
 :root {
     /* Warriors color palette */
     --warriors-blue: #1d428a;
     --warriors-gold: #ffc72c;
 
-    /* Neutral background */
+    /* Neutrals */
     --page-bg: #ffffff;
     --text-main: #0f172a; /* slate-900 */
 }
+
+/* =========================================================
+   Base tweaks (optional but sane defaults)
+   ========================================================= */
+@layer base {
+    body {
+        @apply text-slate-900 antialiased;
+        background-color: var(--page-bg);
+    }
+}
+
+/* =========================================================
+   Reusable layout & UI primitives
+   (THIS is where we reduce JSX noise)
+   ========================================================= */
+@layer components {
+    .content-rail {
+        @apply mx-auto max-w-6xl px-6;
+    }
+
+    /* Page padding wrapper */
+    .page-pad {
+        @apply px-6 py-12;
+    }
+
+    /* Card styles */
+    .card {
+        @apply rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-8 shadow-sm;
+    }
+
+    .card-tight {
+        @apply rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-6 shadow-sm;
+    }
+
+    /* Headings */
+    .h1 {
+        @apply text-3xl font-extrabold text-[var(--warriors-blue)];
+    }
+
+    .h2 {
+        @apply text-xl font-bold text-[var(--warriors-blue)];
+    }
+
+    /* Links */
+    .link-primary {
+        @apply font-semibold text-[var(--warriors-blue)] underline;
+    }
+
+    /* Pills / badges */
+    .pill-warn {
+        @apply inline-block rounded-full bg-[var(--warriors-gold)]/20
+        px-4 py-2 text-sm font-semibold text-slate-800;
+    }
+
+    .pill-info {
+        @apply inline-block rounded-full bg-slate-100
+        px-4 py-2 text-sm font-semibold text-slate-700;
+    }
+}
+
