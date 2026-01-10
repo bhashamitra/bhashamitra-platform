@@ -1,4 +1,4 @@
-export default function AdminDashboard() {
+export default function EditorialDashboard() {
     return (
         <div className="page-pad">
             <div className="content-rail">

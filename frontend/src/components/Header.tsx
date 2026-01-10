@@ -103,7 +103,7 @@ export default function Header({
                                             className="block cursor-pointer px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                                             onClick={() => setOpen(false)}
                                         >
-                                            Admin Dashboard
+                                            Editorial Dashboard
                                         </Link>
                                     )}
 
