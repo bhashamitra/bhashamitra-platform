@@ -28,25 +28,33 @@
    (THIS is where we reduce JSX noise)
    ========================================================= */
 @layer components {
+    /* -----------------------------------------------------
+       Layout
+       ----------------------------------------------------- */
     .content-rail {
         @apply mx-auto max-w-6xl px-6;
     }
 
-    /* Page padding wrapper */
     .page-pad {
         @apply px-6 py-12;
     }
 
-    /* Card styles */
+    /* -----------------------------------------------------
+       Cards
+       ----------------------------------------------------- */
     .card {
-        @apply rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-8 shadow-sm;
+        @apply rounded-2xl border border-slate-200
+        bg-white/90 backdrop-blur p-8 shadow-sm;
     }
 
     .card-tight {
-        @apply rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-6 shadow-sm;
+        @apply rounded-2xl border border-slate-200
+        bg-white/90 backdrop-blur p-6 shadow-sm;
     }
 
-    /* Headings */
+    /* -----------------------------------------------------
+       Headings
+       ----------------------------------------------------- */
     .h1 {
         @apply text-3xl font-extrabold text-[var(--warriors-blue)];
     }
@@ -55,20 +63,102 @@
         @apply text-xl font-bold text-[var(--warriors-blue)];
     }
 
-    /* Links */
+    /* -----------------------------------------------------
+       Links
+       ----------------------------------------------------- */
     .link-primary {
         @apply font-semibold text-[var(--warriors-blue)] underline;
     }
 
-    /* Pills / badges */
+    /* -----------------------------------------------------
+       Pills / badges
+       ----------------------------------------------------- */
     .pill-warn {
-        @apply inline-block rounded-full bg-[var(--warriors-gold)]/20
+        @apply inline-block rounded-full
+        bg-[var(--warriors-gold)]/20
         px-4 py-2 text-sm font-semibold text-slate-800;
     }
 
     .pill-info {
-        @apply inline-block rounded-full bg-slate-100
+        @apply inline-block rounded-full
+        bg-slate-100
         px-4 py-2 text-sm font-semibold text-slate-700;
     }
-}
 
+    .pill-ok {
+        @apply inline-block rounded-full
+        bg-emerald-100
+        px-4 py-2 text-sm font-semibold text-emerald-800;
+    }
+
+    /* =====================================================
+       Editorial / Admin primitives
+       ===================================================== */
+
+    /* Admin page header */
+    .admin-page-header {
+        @apply flex items-start justify-between gap-4;
+    }
+
+    .admin-page-subtitle {
+        @apply mt-1 text-slate-600;
+    }
+
+    /* -----------------------------------------------------
+       Admin tables
+       ----------------------------------------------------- */
+    .admin-table {
+        @apply w-full text-sm
+        rounded-lg border border-slate-200
+        bg-white/70 backdrop-blur
+        overflow-hidden;
+    }
+
+    .admin-table thead {
+        @apply bg-white/60 border-b border-slate-200;
+    }
+
+    .admin-table th {
+        @apply px-4 py-3
+        text-left font-semibold text-slate-700;
+    }
+
+    .admin-table td {
+        @apply px-4 py-3;
+    }
+
+    .admin-table tr {
+        @apply border-b border-slate-200/70
+        last:border-b-0;
+    }
+
+    /* Clickable sortable headers */
+    .admin-th-sort {
+        @apply hover:underline cursor-pointer;
+    }
+
+    /* -----------------------------------------------------
+       Admin buttons
+       ----------------------------------------------------- */
+    .admin-btn {
+        @apply rounded-md border
+        px-3 py-1.5 text-sm font-semibold
+        bg-white/70;
+    }
+
+    .admin-btn-default {
+        @apply border-slate-200
+        text-slate-700
+        hover:bg-slate-50;
+    }
+
+    .admin-btn-primary {
+        @apply border-[var(--warriors-gold)]
+        text-[var(--warriors-blue)]
+        hover:bg-[var(--warriors-gold)]/20;
+    }
+
+    .admin-btn-disabled {
+        @apply cursor-not-allowed opacity-60;
+    }
+}
