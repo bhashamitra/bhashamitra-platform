@@ -1,9 +1,14 @@
 package com.bhashamitra.platform.services;
 
 import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
+import com.bhashamitra.platform.controllers.dto.RelatedCounts;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
+import com.bhashamitra.platform.repositories.LemmaSentenceLinkRepository;
+import com.bhashamitra.platform.repositories.MeaningRepository;
+import com.bhashamitra.platform.repositories.PronunciationRepository;
+import com.bhashamitra.platform.repositories.SurfaceFormRepository;
 import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
 import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
 import jakarta.persistence.criteria.Predicate;
@@ -26,13 +31,25 @@ public class LemmaService {
     private final LemmaRepository lemmaRepository;
     private final LanguageService languageService;
     private final AuditService auditService;
+    private final MeaningRepository meaningRepository;
+    private final SurfaceFormRepository surfaceFormRepository;
+    private final LemmaSentenceLinkRepository lemmaSentenceLinkRepository;
+    private final PronunciationRepository pronunciationRepository;
 
     public LemmaService(LemmaRepository lemmaRepository,
                         LanguageService languageService,
-                        AuditService auditService) {
+                        AuditService auditService,
+                        MeaningRepository meaningRepository,
+                        SurfaceFormRepository surfaceFormRepository,
+                        LemmaSentenceLinkRepository lemmaSentenceLinkRepository,
+                        PronunciationRepository pronunciationRepository) {
         this.lemmaRepository = lemmaRepository;
         this.languageService = languageService;
         this.auditService = auditService;
+        this.meaningRepository = meaningRepository;
+        this.surfaceFormRepository = surfaceFormRepository;
+        this.lemmaSentenceLinkRepository = lemmaSentenceLinkRepository;
+        this.pronunciationRepository = pronunciationRepository;
     }
 
     // =========================================================
@@ -300,6 +317,18 @@ public class LemmaService {
     // =========================================================
     // Helpers
     // =========================================================
+
+    /**
+     * Load related counts for a lemma
+     */
+    public RelatedCounts loadRelatedCounts(String lemmaId) {
+        long meaningsCount = meaningRepository.countByLemma_Id(lemmaId);
+        long surfaceFormsCount = surfaceFormRepository.countByLemma_Id(lemmaId);
+        long sentencesCount = lemmaSentenceLinkRepository.countByLemma_Id(lemmaId);
+        long pronunciationsCount = pronunciationRepository.countByOwnerTypeAndOwnerId("LEMMA", lemmaId);
+        
+        return new RelatedCounts(meaningsCount, surfaceFormsCount, sentencesCount, pronunciationsCount);
+    }
 
     private void requireEnabledLanguage(String language) {
         if (language == null || language.isBlank()) {

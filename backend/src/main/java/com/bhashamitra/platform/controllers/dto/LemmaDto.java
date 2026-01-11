@@ -7,5 +7,6 @@ public record LemmaDto(
         String lemmaLatin,
         String pos,
         String notes,
-        String status
+        String status,
+        RelatedCounts counts
 ) {}

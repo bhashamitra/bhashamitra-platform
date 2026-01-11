@@ -4,6 +4,10 @@ import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
+import com.bhashamitra.platform.repositories.LemmaSentenceLinkRepository;
+import com.bhashamitra.platform.repositories.MeaningRepository;
+import com.bhashamitra.platform.repositories.PronunciationRepository;
+import com.bhashamitra.platform.repositories.SurfaceFormRepository;
 import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
 import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +44,18 @@ class LemmaServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private MeaningRepository meaningRepository;
+
+    @Mock
+    private SurfaceFormRepository surfaceFormRepository;
+
+    @Mock
+    private LemmaSentenceLinkRepository lemmaSentenceLinkRepository;
+
+    @Mock
+    private PronunciationRepository pronunciationRepository;
 
     @InjectMocks
     private LemmaService lemmaService;
@@ -1102,5 +1118,56 @@ class LemmaServiceTest {
         
         Pageable pageable = pageableCaptor.getValue();
         assertEquals(Sort.by(Sort.Direction.DESC, "status"), pageable.getSort());
+    }
+
+    // =========================================================
+    // loadRelatedCounts Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("loadRelatedCounts - Should return correct counts for all related entities")
+    void loadRelatedCounts_ShouldReturnCorrectCountsForAllRelatedEntities() {
+        // Given
+        String lemmaId = "lemma-123";
+        
+        when(meaningRepository.countByLemma_Id(lemmaId)).thenReturn(3L);
+        when(surfaceFormRepository.countByLemma_Id(lemmaId)).thenReturn(5L);
+        when(lemmaSentenceLinkRepository.countByLemma_Id(lemmaId)).thenReturn(2L);
+        when(pronunciationRepository.countByOwnerTypeAndOwnerId("LEMMA", lemmaId)).thenReturn(1L);
+
+        // When
+        var result = lemmaService.loadRelatedCounts(lemmaId);
+
+        // Then
+        assertEquals(3L, result.meanings());
+        assertEquals(5L, result.surfaceForms());
+        assertEquals(2L, result.sentences());
+        assertEquals(1L, result.pronunciations());
+        
+        verify(meaningRepository).countByLemma_Id(lemmaId);
+        verify(surfaceFormRepository).countByLemma_Id(lemmaId);
+        verify(lemmaSentenceLinkRepository).countByLemma_Id(lemmaId);
+        verify(pronunciationRepository).countByOwnerTypeAndOwnerId("LEMMA", lemmaId);
+    }
+
+    @Test
+    @DisplayName("loadRelatedCounts - Should return zero counts when no related entities exist")
+    void loadRelatedCounts_ShouldReturnZeroCountsWhenNoRelatedEntitiesExist() {
+        // Given
+        String lemmaId = "lemma-123";
+        
+        when(meaningRepository.countByLemma_Id(lemmaId)).thenReturn(0L);
+        when(surfaceFormRepository.countByLemma_Id(lemmaId)).thenReturn(0L);
+        when(lemmaSentenceLinkRepository.countByLemma_Id(lemmaId)).thenReturn(0L);
+        when(pronunciationRepository.countByOwnerTypeAndOwnerId("LEMMA", lemmaId)).thenReturn(0L);
+
+        // When
+        var result = lemmaService.loadRelatedCounts(lemmaId);
+
+        // Then
+        assertEquals(0L, result.meanings());
+        assertEquals(0L, result.surfaceForms());
+        assertEquals(0L, result.sentences());
+        assertEquals(0L, result.pronunciations());
     }
 }

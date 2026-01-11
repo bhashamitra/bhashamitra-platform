@@ -11,6 +11,9 @@ public interface MeaningRepository extends JpaRepository<Meaning, String> {
     // List meanings for a lemma, ordered by priority (lowest first)
     List<Meaning> findByLemma_IdOrderByPriorityAscIdAsc(String lemmaId);
 
+    // Count meanings for a lemma
+    long countByLemma_Id(String lemmaId);
+
     // Uniqueness helper (matches uk_meanings_lemma_lang_priority)
     boolean existsByLemma_IdAndMeaningLanguageAndPriority(String lemmaId, String meaningLanguage, Integer priority);
 

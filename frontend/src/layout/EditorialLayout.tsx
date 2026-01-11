@@ -42,7 +42,6 @@ export default function EditorialLayout() {
                                 <NavItem to="/admin" label="Dashboard" />
                                 <NavItem to="/admin/lemmas" label="Lemmas" />
                                 <NavItem to="/admin/sentences" label="Sentences" />
-                                <NavItem to="/admin/pronunciations" label="Pronunciations" />
                             </Section>
 
                             <Section title="Admin">

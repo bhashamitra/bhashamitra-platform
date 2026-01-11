@@ -18,4 +18,7 @@ public interface LemmaSentenceLinkRepository extends JpaRepository<LemmaSentence
 
     // Browse links by sentence (useful for "which lemmas are in this sentence?")
     List<LemmaSentenceLink> findBySentence_IdOrderByCreatedDateDescIdDesc(String sentenceId);
+
+    // Count linked sentences for a lemma
+    long countByLemma_Id(String lemmaId);
 }

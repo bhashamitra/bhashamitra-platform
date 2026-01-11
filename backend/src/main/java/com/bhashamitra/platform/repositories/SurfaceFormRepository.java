@@ -15,4 +15,7 @@ public interface SurfaceFormRepository extends JpaRepository<SurfaceForm, String
 
     // Browse forms for a lemma
     List<SurfaceForm> findByLemma_IdOrderByFormNativeAscIdAsc(String lemmaId);
+
+    // Count surface forms for a lemma
+    long countByLemma_Id(String lemmaId);
 }

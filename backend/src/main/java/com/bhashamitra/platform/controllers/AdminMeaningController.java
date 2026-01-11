@@ -29,7 +29,7 @@ public class AdminMeaningController {
     // --------------------
 
     @GetMapping("/{id}")
-    public ResponseEntity<MeaningDto> getById(@PathVariable String id) {
+    public ResponseEntity<MeaningDto> getById(@PathVariable(name = "id") String id) {
         try {
             return ResponseEntity.ok(toDto(meaningService.getById(id)));
         } catch (IllegalArgumentException e) {
@@ -38,7 +38,7 @@ public class AdminMeaningController {
     }
 
     @GetMapping
-    public List<MeaningDto> listByLemmaId(@RequestParam String lemmaId) {
+    public List<MeaningDto> listByLemmaId(@RequestParam(name = "lemmaId") String lemmaId) {
         return meaningService.listByLemmaId(lemmaId).stream()
                 .map(AdminMeaningController::toDto)
                 .toList();
@@ -72,7 +72,7 @@ public class AdminMeaningController {
     // --------------------
 
     @PutMapping("/{id}")
-    public ResponseEntity<MeaningDto> update(@PathVariable String id,
+    public ResponseEntity<MeaningDto> update(@PathVariable(name = "id") String id,
                                              @Valid @RequestBody UpdateMeaningRequest req,
                                              Authentication auth) {
         String actor = actor(auth);
@@ -96,7 +96,7 @@ public class AdminMeaningController {
     // --------------------
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
+    public ResponseEntity<Void> delete(@PathVariable(name = "id") String id, Authentication auth) {
         meaningService.delete(id, actor(auth));
         return ResponseEntity.noContent().build();
     }

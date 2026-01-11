@@ -4,6 +4,7 @@ import com.bhashamitra.platform.controllers.dto.CreateLemmaRequest;
 import com.bhashamitra.platform.controllers.dto.LemmaDto;
 import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
 import com.bhashamitra.platform.controllers.dto.PagedLemmasResponse;
+import com.bhashamitra.platform.controllers.dto.RelatedCounts;
 import com.bhashamitra.platform.controllers.dto.UpdateLemmaRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
@@ -35,7 +36,7 @@ public class AdminLemmaController {
     // --------------------
 
     @GetMapping("/{id}")
-    public ResponseEntity<LemmaDto> getById(@PathVariable String id) {
+    public ResponseEntity<LemmaDto> getById(@PathVariable(name = "id") String id) {
         try {
             return ResponseEntity.ok(toDto(lemmaService.getById(id)));
         } catch (IllegalArgumentException e) {
@@ -46,14 +47,14 @@ public class AdminLemmaController {
     // List all lemmas for a language (all statuses)
     @GetMapping
     public PagedLemmasResponse searchLemmas(
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "mr") String language,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String pos,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lemmaNative") String sort,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "language", defaultValue = "mr") String language,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "pos", required = false) String pos,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sort", defaultValue = "lemmaNative") String sort,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction
     ) {
         LemmaSearchRequest request = new LemmaSearchRequest(
                 search, language, status, pos, page, size, sort, direction
@@ -62,7 +63,7 @@ public class AdminLemmaController {
         Page<Lemma> lemmaPage = lemmaService.searchLemmas(request);
 
         List<LemmaDto> content = lemmaPage.getContent().stream()
-                .map(AdminLemmaController::toDto)
+                .map(this::toDtoWithCounts)
                 .toList();
 
         return new PagedLemmasResponse(
@@ -106,7 +107,7 @@ public class AdminLemmaController {
     // --------------------
 
     @PutMapping("/{id}")
-    public ResponseEntity<LemmaDto> update(@PathVariable String id,
+    public ResponseEntity<LemmaDto> update(@PathVariable(name = "id") String id,
                                            @Valid @RequestBody UpdateLemmaRequest req,
                                            Authentication auth) {
         String actor = actor(auth);
@@ -139,8 +140,8 @@ public class AdminLemmaController {
     // --------------------
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<LemmaDto> setStatus(@PathVariable String id,
-                                              @RequestParam String status,
+    public ResponseEntity<LemmaDto> setStatus(@PathVariable(name = "id") String id,
+                                              @RequestParam(name = "status") String status,
                                               Authentication auth) {
         String actor = actor(auth);
 
@@ -154,7 +155,7 @@ public class AdminLemmaController {
     }
 
     @PutMapping("/{id}/archive")
-    public ResponseEntity<LemmaDto> archive(@PathVariable String id, Authentication auth) {
+    public ResponseEntity<LemmaDto> archive(@PathVariable(name = "id") String id, Authentication auth) {
         String actor = actor(auth);
         try {
             Lemma updated = lemmaService.setStatus(id, LemmaStatus.ARCHIVED, actor);
@@ -165,8 +166,8 @@ public class AdminLemmaController {
     }
 
     @PutMapping("/{id}/unarchive")
-    public ResponseEntity<LemmaDto> unarchive(@PathVariable String id,
-                                              @RequestParam(defaultValue = "REVIEW") String status,
+    public ResponseEntity<LemmaDto> unarchive(@PathVariable(name = "id") String id,
+                                              @RequestParam(name = "status", defaultValue = "REVIEW") String status,
                                               Authentication auth) {
         String actor = actor(auth);
         try {
@@ -193,7 +194,21 @@ public class AdminLemmaController {
                 l.getLemmaLatin(),
                 l.getPos(),
                 l.getNotes(),
-                l.getStatus() != null ? l.getStatus().name() : null
+                l.getStatus() != null ? l.getStatus().name() : null,
+                null // counts will be loaded separately
+        );
+    }
+
+    private LemmaDto toDtoWithCounts(Lemma l) {
+        return new LemmaDto(
+                l.getId(),
+                l.getLanguage(),
+                l.getLemmaNative(),
+                l.getLemmaLatin(),
+                l.getPos(),
+                l.getNotes(),
+                l.getStatus() != null ? l.getStatus().name() : null,
+                lemmaService.loadRelatedCounts(l.getId())
         );
     }
 }

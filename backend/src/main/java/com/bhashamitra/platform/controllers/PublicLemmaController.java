@@ -44,7 +44,8 @@ public class PublicLemmaController {
                 l.getLemmaLatin(),
                 l.getPos(),
                 l.getNotes(),
-                l.getStatus() != null ? l.getStatus().name() : null
+                l.getStatus() != null ? l.getStatus().name() : null,
+                null // Public API doesn't need counts
         );
     }
 }
