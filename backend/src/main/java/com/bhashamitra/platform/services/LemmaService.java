@@ -1,13 +1,21 @@
 package com.bhashamitra.platform.services;
 
+import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
 import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
 import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +33,55 @@ public class LemmaService {
         this.lemmaRepository = lemmaRepository;
         this.languageService = languageService;
         this.auditService = auditService;
+    }
+
+    // =========================================================
+    // Paginated Search (Admin/Editor)
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<Lemma> searchLemmas(LemmaSearchRequest request) {
+        // Build the specification for filtering
+        Specification<Lemma> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Search in native text and latin text
+            if (request.search() != null && !request.search().isBlank()) {
+                String searchTerm = "%" + request.search().toLowerCase() + "%";
+                Predicate nativeSearch = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("lemmaNative")), searchTerm);
+                Predicate latinSearch = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("lemmaLatin")), searchTerm);
+                predicates.add(criteriaBuilder.or(nativeSearch, latinSearch));
+            }
+
+            // Filter by language
+            if (request.language() != null && !request.language().isBlank()) {
+                predicates.add(criteriaBuilder.equal(root.get("language"), request.language()));
+            }
+
+            // Filter by status
+            if (request.status() != null && !request.status().isBlank()) {
+                LemmaStatus status = LemmaStatus.valueOf(request.status().toUpperCase());
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+
+            // Filter by POS
+            if (request.pos() != null && !request.pos().isBlank()) {
+                predicates.add(criteriaBuilder.equal(root.get("pos"), request.pos()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // Build the pageable with sorting
+        Sort sort = Sort.by(
+            request.direction().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+            request.sort()
+        );
+        Pageable pageable = PageRequest.of(request.page(), request.size(), sort);
+
+        return lemmaRepository.findAll(spec, pageable);
     }
 
     // =========================================================

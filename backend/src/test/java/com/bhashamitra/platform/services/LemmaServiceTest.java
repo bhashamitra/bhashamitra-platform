@@ -1,5 +1,6 @@
 package com.bhashamitra.platform.services;
 
+import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
@@ -13,6 +14,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Arrays;
 import java.util.List;
@@ -1016,5 +1021,86 @@ class LemmaServiceTest {
         // Verify all interactions
         verify(lemmaRepository, times(2)).save(any(Lemma.class));
         verify(auditService, times(2)).record(eq("LEMMA"), any(String.class), eq("LEMMA_STATUS_CHANGED"), eq(actor), isNull(), any(Map.class));
+    }
+
+    // =========================================================
+    // searchLemmas Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("searchLemmas - Should return paginated results with all filters")
+    void searchLemmas_ShouldReturnPaginatedResultsWithAllFilters() {
+        // Given
+        LemmaSearchRequest request = new LemmaSearchRequest(
+                "नमस्कार", "mr", "DRAFT", "noun", 0, 20, "lemmaNative", "asc"
+        );
+        
+        Lemma lemma1 = new Lemma();
+        lemma1.setLanguage("mr");
+        lemma1.setLemmaNative("नमस्कार");
+        lemma1.setLemmaLatin("namaskar");
+        lemma1.setPos("noun");
+        lemma1.setStatus(LemmaStatus.DRAFT);
+        
+        Page<Lemma> mockPage = mock(Page.class);
+        when(mockPage.getContent()).thenReturn(Arrays.asList(lemma1));
+        
+        when(lemmaRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        Page<Lemma> result = lemmaService.searchLemmas(request);
+
+        // Then
+        assertEquals(mockPage, result);
+        assertEquals(1, result.getContent().size());
+        assertEquals("नमस्कार", result.getContent().get(0).getLemmaNative());
+        
+        verify(lemmaRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("searchLemmas - Should handle pagination parameters")
+    void searchLemmas_ShouldHandlePaginationParameters() {
+        // Given
+        LemmaSearchRequest request = new LemmaSearchRequest(
+                null, "mr", null, null, 2, 50, "lemmaNative", "asc"
+        );
+        
+        Page<Lemma> mockPage = mock(Page.class);
+        when(lemmaRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        lemmaService.searchLemmas(request);
+
+        // Then
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(lemmaRepository).findAll(any(Specification.class), pageableCaptor.capture());
+        
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(2, pageable.getPageNumber());
+        assertEquals(50, pageable.getPageSize());
+        assertEquals(Sort.by(Sort.Direction.ASC, "lemmaNative"), pageable.getSort());
+    }
+
+    @Test
+    @DisplayName("searchLemmas - Should handle descending sort")
+    void searchLemmas_ShouldHandleDescendingSort() {
+        // Given
+        LemmaSearchRequest request = new LemmaSearchRequest(
+                null, "mr", null, null, 0, 20, "status", "desc"
+        );
+        
+        Page<Lemma> mockPage = mock(Page.class);
+        when(lemmaRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        lemmaService.searchLemmas(request);
+
+        // Then
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(lemmaRepository).findAll(any(Specification.class), pageableCaptor.capture());
+        
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(Sort.by(Sort.Direction.DESC, "status"), pageable.getSort());
     }
 }

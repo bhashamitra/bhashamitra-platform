@@ -3,11 +3,12 @@ package com.bhashamitra.platform.repositories;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface LemmaRepository extends JpaRepository<Lemma, String> {
+public interface LemmaRepository extends JpaRepository<Lemma, String>, JpaSpecificationExecutor<Lemma> {
 
     // -------- Admin/editor queries (all statuses) --------
 

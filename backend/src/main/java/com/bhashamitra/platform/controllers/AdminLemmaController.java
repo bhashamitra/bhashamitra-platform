@@ -2,6 +2,8 @@ package com.bhashamitra.platform.controllers;
 
 import com.bhashamitra.platform.controllers.dto.CreateLemmaRequest;
 import com.bhashamitra.platform.controllers.dto.LemmaDto;
+import com.bhashamitra.platform.controllers.dto.LemmaSearchRequest;
+import com.bhashamitra.platform.controllers.dto.PagedLemmasResponse;
 import com.bhashamitra.platform.controllers.dto.UpdateLemmaRequest;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
@@ -9,6 +11,7 @@ import com.bhashamitra.platform.services.LemmaService;
 import com.bhashamitra.platform.services.dto.LemmaCreateRequest;
 import com.bhashamitra.platform.services.dto.LemmaUpdateRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -42,20 +45,35 @@ public class AdminLemmaController {
 
     // List all lemmas for a language (all statuses)
     @GetMapping
-    public List<LemmaDto> listByLanguage(
-            @RequestParam String language,
-            @RequestParam(required = false) String status
+    public PagedLemmasResponse searchLemmas(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "mr") String language,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String pos,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "lemmaNative") String sort,
+            @RequestParam(defaultValue = "asc") String direction
     ) {
-        List<Lemma> lemmas;
+        LemmaSearchRequest request = new LemmaSearchRequest(
+                search, language, status, pos, page, size, sort, direction
+        );
 
-        if (status == null || status.isBlank()) {
-            lemmas = lemmaService.listByLanguage(language);
-        } else {
-            LemmaStatus st = LemmaStatus.valueOf(status.trim().toUpperCase());
-            lemmas = lemmaService.listByLanguageAndStatus(language, st);
-        }
+        Page<Lemma> lemmaPage = lemmaService.searchLemmas(request);
 
-        return lemmas.stream().map(AdminLemmaController::toDto).toList();
+        List<LemmaDto> content = lemmaPage.getContent().stream()
+                .map(AdminLemmaController::toDto)
+                .toList();
+
+        return new PagedLemmasResponse(
+                content,
+                lemmaPage.getNumber(),
+                lemmaPage.getSize(),
+                lemmaPage.getTotalElements(),
+                lemmaPage.getTotalPages(),
+                lemmaPage.isFirst(),
+                lemmaPage.isLast()
+        );
     }
 
     // --------------------
