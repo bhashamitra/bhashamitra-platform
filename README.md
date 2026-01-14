@@ -6,10 +6,10 @@ Starting with **Marathi** and expanding to **Hindi**, **Gujarati**, and other la
 
 ## Tech Stack
 
-- **Backend**: Java 21 + Spring Boot 3
+- **Backend**: Java 21 + Spring Boot 4.0.1
 - **Database**: MySQL 8.0 (Aurora Serverless v2 in production)
 - **Frontend**: React + TypeScript + Vite
-- **Infrastructure**: AWS (ECS Fargate, ALB, Route 53)
+- **Infrastructure**: AWS (ECS Fargate, ALB, Route 53, S3 to store audio files)
 - **CI/CD**: GitHub Actions with OIDC
 
 ## Local Development
@@ -87,8 +87,17 @@ The application uses **Liquibase** for database schema management with master ch
 
 ## Status
 
-🚧 **Active Development** - Shri Ganesha phase
+🚧 **Active Development** - Editorial Workflows Complete
 
-- **Infrastructure**: ✅ Production-ready AWS infrastructure deployed
-- **Application**: 🚧 Spring Boot development in progress
+- **Infrastructure**: ✅ Production-ready AWS infrastructure deployed (ECS Fargate, Aurora MySQL, Cognito, S3)
+- **Backend API**: ✅ Complete REST API for all content entities
+- **Editorial UI v1**: ✅ Complete admin/editor workflows
+  - Lemmas (list, create, edit, status workflow, pagination, filtering)
+  - Meanings (CRUD via modal, linked to lemmas)
+  - Surface Forms (CRUD via modal, linked to lemmas)
+  - Pronunciations (CRUD via modal, linked to lemmas/sentences)
+  - Usage Sentences (list, create, edit, status workflow)
+  - Languages (admin management)
+- **Authentication**: ✅ Cognito OAuth2 with role-based access (admin, editor, learner)
 - **Initial focus**: Marathi language core
+- **Next**: Public learner-facing UI
