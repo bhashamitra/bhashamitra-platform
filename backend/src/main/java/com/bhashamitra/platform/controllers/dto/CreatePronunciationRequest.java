@@ -9,5 +9,6 @@ public record CreatePronunciationRequest(
         @Size(max = 100) String speaker,
         @Size(max = 100) String region,
         @NotBlank @Size(max = 1024) String audioUri,
-        Integer durationMs
+        Integer durationMs,
+        Boolean isPrimary
 ) {}

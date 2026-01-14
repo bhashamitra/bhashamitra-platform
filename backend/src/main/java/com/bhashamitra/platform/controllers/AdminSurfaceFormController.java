@@ -38,7 +38,7 @@ public class AdminSurfaceFormController {
     }
 
     @GetMapping
-    public List<SurfaceFormDto> listByLemmaId(@RequestParam String lemmaId) {
+    public List<SurfaceFormDto> listByLemmaId(@RequestParam("lemmaId") String lemmaId) {
         return surfaceFormService.listByLemmaId(lemmaId).stream()
                 .map(AdminSurfaceFormController::toDto)
                 .toList();
@@ -49,8 +49,8 @@ public class AdminSurfaceFormController {
     // --------------------
 
     @PostMapping
-    public ResponseEntity<SurfaceFormDto> create(@Valid @RequestBody CreateSurfaceFormRequest req,
-                                                 Authentication auth) {
+    public ResponseEntity<?> create(@Valid @RequestBody CreateSurfaceFormRequest req,
+                                    Authentication auth) {
         String act = actor(auth);
 
         SurfaceFormService.SurfaceFormCreateRequest svcReq =
@@ -59,6 +59,7 @@ public class AdminSurfaceFormController {
                         req.formNative(),
                         req.formLatin(),
                         req.formType(),
+                        req.featuresJson(),
                         req.notes()
                 );
 
@@ -66,7 +67,7 @@ public class AdminSurfaceFormController {
             SurfaceForm created = surfaceFormService.create(svcReq, act);
             return ResponseEntity.ok(toDto(created));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -75,9 +76,9 @@ public class AdminSurfaceFormController {
     // --------------------
 
     @PutMapping("/{id}")
-    public ResponseEntity<SurfaceFormDto> update(@PathVariable String id,
-                                                 @Valid @RequestBody UpdateSurfaceFormRequest req,
-                                                 Authentication auth) {
+    public ResponseEntity<?> update(@PathVariable("id") String id,
+                                    @Valid @RequestBody UpdateSurfaceFormRequest req,
+                                    Authentication auth) {
         String act = actor(auth);
 
         SurfaceFormService.SurfaceFormUpdateRequest svcReq =
@@ -85,6 +86,7 @@ public class AdminSurfaceFormController {
                         req.formNative(),
                         req.formLatin(),
                         req.formType(),
+                        req.featuresJson(),
                         req.notes()
                 );
 
@@ -92,7 +94,7 @@ public class AdminSurfaceFormController {
             SurfaceForm updated = surfaceFormService.update(id, svcReq, act);
             return ResponseEntity.ok(toDto(updated));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -101,7 +103,7 @@ public class AdminSurfaceFormController {
     // --------------------
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, Authentication auth) {
         try {
             surfaceFormService.delete(id, actor(auth));
             return ResponseEntity.noContent().build();
@@ -121,6 +123,7 @@ public class AdminSurfaceFormController {
                 sf.getFormNative(),
                 sf.getFormLatin(),
                 sf.getFormType(),
+                sf.getFeaturesJson(),
                 sf.getNotes()
         );
     }

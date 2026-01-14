@@ -41,4 +41,7 @@ public class Pronunciation extends Auditable {
 
     @Column(name = "duration_ms")
     private Integer durationMs;
+
+    @Column(name = "is_primary", nullable = false)
+    private Boolean isPrimary = false;
 }

@@ -17,15 +17,18 @@ public class PronunciationService {
     private final PronunciationRepository pronunciationRepository;
     private final LemmaService lemmaService;
     private final UsageSentenceService usageSentenceService;
+    private final SurfaceFormService surfaceFormService;
     private final AuditService auditService;
 
     public PronunciationService(PronunciationRepository pronunciationRepository,
                                 LemmaService lemmaService,
                                 UsageSentenceService usageSentenceService,
+                                SurfaceFormService surfaceFormService,
                                 AuditService auditService) {
         this.pronunciationRepository = pronunciationRepository;
         this.lemmaService = lemmaService;
         this.usageSentenceService = usageSentenceService;
+        this.surfaceFormService = surfaceFormService;
         this.auditService = auditService;
     }
 
@@ -87,6 +90,7 @@ public class PronunciationService {
         details.put("speaker", saved.getSpeaker());
         details.put("region", saved.getRegion());
         details.put("durationMs", saved.getDurationMs());
+        details.put("isPrimary", saved.getIsPrimary());
 
         auditService.record(
                 ENTITY_TYPE,
@@ -112,11 +116,26 @@ public class PronunciationService {
         String beforeRegion = existing.getRegion();
         String beforeAudioUri = existing.getAudioUri();
         Integer beforeDuration = existing.getDurationMs();
+        Boolean beforeIsPrimary = existing.getIsPrimary();
 
         if (req.speaker() != null) existing.setSpeaker(normalizeNullable(req.speaker()));
         if (req.region() != null) existing.setRegion(normalizeNullable(req.region()));
         if (req.audioUri() != null) existing.setAudioUri(requireNonBlank(req.audioUri(), "audioUri"));
         if (req.durationMs() != null) existing.setDurationMs(req.durationMs());
+        if (req.isPrimary() != null) {
+            existing.setIsPrimary(req.isPrimary());
+            // If setting this as primary, unset primary flag for all other pronunciations of this owner
+            if (req.isPrimary()) {
+                List<Pronunciation> existingPrimary = pronunciationRepository.findByOwnerTypeAndOwnerIdAndIsPrimaryTrue(
+                        existing.getOwnerType(), existing.getOwnerId());
+                for (Pronunciation other : existingPrimary) {
+                    if (!other.getId().equals(existing.getId())) {
+                        other.setIsPrimary(false);
+                        pronunciationRepository.save(other);
+                    }
+                }
+            }
+        }
 
         if (isNonBlank(actor)) {
             existing.setLastModifiedBy(actor);
@@ -129,12 +148,14 @@ public class PronunciationService {
         before.put("region", beforeRegion);
         before.put("audioUri", beforeAudioUri);
         before.put("durationMs", beforeDuration);
+        before.put("isPrimary", beforeIsPrimary);
 
         Map<String, Object> after = new LinkedHashMap<>();
         after.put("speaker", saved.getSpeaker());
         after.put("region", saved.getRegion());
         after.put("audioUri", saved.getAudioUri());
         after.put("durationMs", saved.getDurationMs());
+        after.put("isPrimary", saved.getIsPrimary());
 
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("ownerType", saved.getOwnerType());
@@ -214,14 +235,16 @@ public class PronunciationService {
             String speaker,
             String region,
             String audioUri,
-            Integer durationMs
+            Integer durationMs,
+            Boolean isPrimary
     ) {}
 
     public record UpdateRequest(
             String speaker,
             String region,
             String audioUri,
-            Integer durationMs
+            Integer durationMs,
+            Boolean isPrimary
     ) {}
 
     // =========================================================
@@ -235,6 +258,10 @@ public class PronunciationService {
         }
         if ("SENTENCE".equals(ownerType)) {
             usageSentenceService.getById(ownerId); // admin may attach to DRAFT/REVIEW
+            return;
+        }
+        if ("SURFACE_FORM".equals(ownerType)) {
+            surfaceFormService.getById(ownerId); // admin may attach to DRAFT/REVIEW
             return;
         }
         throw new IllegalArgumentException("Unsupported ownerType: " + ownerType);

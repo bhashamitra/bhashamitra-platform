@@ -91,6 +91,12 @@
         px-4 py-2 text-sm font-semibold text-emerald-800;
     }
 
+    .pill-muted {
+        @apply inline-block rounded-full
+        bg-slate-200
+        px-4 py-2 text-sm font-semibold text-slate-600;
+    }
+
     /* =====================================================
        Editorial / Admin primitives
        ===================================================== */
@@ -160,5 +166,104 @@
 
     .admin-btn-disabled {
         @apply cursor-not-allowed opacity-60;
+    }
+
+    /* -----------------------------------------------------
+       Action icon buttons (edit, delete, audio)
+       ----------------------------------------------------- */
+    .action-btn {
+        @apply p-1 rounded
+        focus:outline-none focus:ring-2 focus:ring-offset-1
+        transition-colors;
+    }
+
+    .action-btn-edit {
+        @apply text-blue-600 hover:text-blue-800
+        hover:bg-blue-50
+        focus:ring-blue-500;
+    }
+
+    .action-btn-delete {
+        @apply text-red-600 hover:text-red-800
+        hover:bg-red-50
+        focus:ring-red-500;
+    }
+
+    .action-btn-audio {
+        @apply hover:bg-blue-50
+        focus:ring-blue-500;
+    }
+
+    .action-btn-audio-empty {
+        @apply hover:bg-slate-50
+        focus:ring-slate-400;
+    }
+
+    /* -----------------------------------------------------
+       Form inputs
+       ----------------------------------------------------- */
+    .form-input {
+        @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm;
+    }
+
+    .form-input-disabled {
+        @apply bg-slate-50 text-slate-500 cursor-not-allowed;
+    }
+
+    .form-filter-input {
+        @apply rounded-md border border-slate-300 px-3 py-1.5 text-sm;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-slate-700 mb-1;
+    }
+
+    /* -----------------------------------------------------
+       Error messages
+       ----------------------------------------------------- */
+    .error-message {
+        @apply rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700;
+    }
+
+    /* -----------------------------------------------------
+       Section headers
+       ----------------------------------------------------- */
+    .section-header {
+        @apply text-lg font-semibold text-slate-800 mb-4;
+    }
+
+    .section-header-alt {
+        @apply text-lg font-semibold text-slate-900 mb-4;
+    }
+
+    /* -----------------------------------------------------
+       Modals
+       ----------------------------------------------------- */
+    .modal-backdrop {
+        @apply fixed inset-0 z-50 flex items-center justify-center bg-black/10;
+    }
+
+    .modal-container {
+        @apply bg-white rounded-lg shadow-xl w-full mx-4 max-h-[90vh] overflow-y-auto;
+    }
+
+    .modal-container-sm {
+        @apply bg-white rounded-lg shadow-xl w-full mx-4 max-h-[90vh] overflow-y-auto max-w-lg;
+    }
+
+    .modal-container-md {
+        @apply bg-white rounded-lg shadow-xl w-full mx-4 max-h-[90vh] overflow-y-auto max-w-2xl;
+    }
+
+    .modal-header {
+        @apply flex items-center justify-between mb-4;
+    }
+
+    .modal-title {
+        @apply text-lg font-semibold text-slate-900;
+    }
+
+    .modal-close-btn {
+        @apply text-slate-400 hover:text-slate-600;
     }
 }

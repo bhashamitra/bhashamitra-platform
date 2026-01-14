@@ -17,11 +17,20 @@
                 <constraints nullable="false"/>
             </column>
 
+            <!--
+              Invariants for lemma_sentence_links:
+              - lemma_id is ALWAYS required for every row.
+              - meaning_id is OPTIONAL and, if present, MUST belong to the same lemma as lemma_id.
+              - surface_form_id is OPTIONAL and, if present, MUST belong to the same lemma as lemma_id.
+              - These consistency rules are enforced in the application layer (service validation),
+                not at the database level, to keep the schema simpler.
+            -->
+
+            <column name="meaning_id" type="CHAR(36)"/>
+            <column name="surface_form_id" type="CHAR(36)"/>
             <column name="sentence_id" type="CHAR(36)">
                 <constraints nullable="false"/>
             </column>
-
-            <column name="surface_form_id" type="CHAR(36)"/>
 
             <!-- exact, inflected, implied -->
             <column name="link_type" type="VARCHAR(20)" defaultValue="exact">
@@ -54,6 +63,15 @@
 
         <addForeignKeyConstraint
                 baseTableName="lemma_sentence_links"
+                baseColumnNames="meaning_id"
+                referencedTableName="meanings"
+                referencedColumnNames="id"
+                constraintName="fk_lsl_meaning"
+                onDelete="SET NULL"/>
+
+
+        <addForeignKeyConstraint
+                baseTableName="lemma_sentence_links"
                 baseColumnNames="sentence_id"
                 referencedTableName="usage_sentences"
                 referencedColumnNames="id"
@@ -81,6 +99,12 @@
             <column name="sentence_id"/>
         </createIndex>
 
+        <createIndex tableName="lemma_sentence_links" indexName="idx_lsl_meaning">
+            <column name="meaning_id"/>
+        </createIndex>
+        <createIndex tableName="lemma_sentence_links" indexName="idx_lsl_surface_form">
+            <column name="surface_form_id"/>
+        </createIndex>
         <rollback>
             <dropTable tableName="lemma_sentence_links"/>
         </rollback>

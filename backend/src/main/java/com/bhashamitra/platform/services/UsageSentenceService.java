@@ -1,11 +1,19 @@
 package com.bhashamitra.platform.services;
 
+import com.bhashamitra.platform.controllers.dto.UsageSentenceSearchRequest;
 import com.bhashamitra.platform.models.UsageSentence;
 import com.bhashamitra.platform.models.UsageSentenceStatus;
 import com.bhashamitra.platform.repositories.UsageSentenceRepository;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +33,52 @@ public class UsageSentenceService {
         this.usageSentenceRepository = usageSentenceRepository;
         this.languageService = languageService;
         this.auditService = auditService;
+    }
+
+    // =========================================================
+    // Paginated Search (Admin/Editor)
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<UsageSentence> searchSentences(UsageSentenceSearchRequest request) {
+        // Build the specification for filtering
+        Specification<UsageSentence> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Search in native text, latin text, and translation
+            if (request.search() != null && !request.search().isBlank()) {
+                String searchTerm = "%" + request.search().toLowerCase() + "%";
+                Predicate nativeSearch = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("sentenceNative")), searchTerm);
+                Predicate latinSearch = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("sentenceLatin")), searchTerm);
+                Predicate translationSearch = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("translation")), searchTerm);
+                predicates.add(criteriaBuilder.or(nativeSearch, latinSearch, translationSearch));
+            }
+
+            // Filter by language
+            if (request.language() != null && !request.language().isBlank()) {
+                predicates.add(criteriaBuilder.equal(root.get("language"), request.language()));
+            }
+
+            // Filter by status
+            if (request.status() != null && !request.status().isBlank()) {
+                UsageSentenceStatus status = UsageSentenceStatus.valueOf(request.status().toUpperCase());
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // Build the pageable with sorting
+        Sort sort = Sort.by(
+            request.direction().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+            request.sort()
+        );
+        Pageable pageable = PageRequest.of(request.page(), request.size(), sort);
+
+        return usageSentenceRepository.findAll(spec, pageable);
     }
 
     // =========================================================

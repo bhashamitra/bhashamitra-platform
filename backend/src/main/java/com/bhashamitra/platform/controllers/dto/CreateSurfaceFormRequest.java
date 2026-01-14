@@ -7,6 +7,7 @@ public record CreateSurfaceFormRequest(
         @NotBlank @Size(max = 36) String lemmaId,
         @NotBlank @Size(max = 255) String formNative,
         @Size(max = 255) String formLatin,
-        @Size(max = 50) String formType,
+        @NotBlank @Size(max = 50) String formType,
+        String featuresJson,
         String notes
 ) {}

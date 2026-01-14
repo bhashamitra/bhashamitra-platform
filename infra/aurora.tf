@@ -10,7 +10,7 @@ resource "random_password" "bhashamitra_app_password" {
 resource "aws_secretsmanager_secret" "bhashamitra_app_credentials" {
   name                    = "bhashamitra/app/credentials"
   description             = "Application user credentials for Bhashamitra Spring Boot app"
-  recovery_window_in_days = 0  # Allow immediate deletion and recreation for DR testing
+  recovery_window_in_days = 0 # Allow immediate deletion and recreation for DR testing
 
   tags = {
     Name        = "bhashamitra-app-credentials"
@@ -61,7 +61,7 @@ resource "aws_rds_cluster_parameter_group" "bhashamitra_aurora" {
 
 # DB subnet group for Aurora (requires subnets in multiple AZs)
 resource "aws_db_subnet_group" "bhashamitra_aurora" {
-  name       = "bhashamitra-aurora-subnet-group"
+  name = "bhashamitra-aurora-subnet-group"
   subnet_ids = [
     aws_subnet.bhashamitra_private_1a.id,
     aws_subnet.bhashamitra_private_1c.id
@@ -76,46 +76,46 @@ resource "aws_db_subnet_group" "bhashamitra_aurora" {
 
 # Aurora Serverless v2 MySQL cluster
 resource "aws_rds_cluster" "bhashamitra_aurora" {
-  cluster_identifier     = "bhashamitra-aurora-cluster"
-  engine                 = "aurora-mysql"
-  engine_version         = null  # Use latest available version
-  database_name          = "bhashamitra"
-  master_username        = "bmadmin"
-  
+  cluster_identifier = "bhashamitra-aurora-cluster"
+  engine             = "aurora-mysql"
+  engine_version     = null # Use latest available version
+  database_name      = "bhashamitra"
+  master_username    = "bmadmin"
+
   # Use AWS Secrets Manager for password management
-  manage_master_user_password = true
-  master_user_secret_kms_key_id = null  # Use default KMS key
-  
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = null # Use default KMS key
+
   # Character set and collation for Indian languages
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.bhashamitra_aurora.name
-  
+
   # Serverless v2 configuration
-  engine_mode    = "provisioned"
+  engine_mode = "provisioned"
   serverlessv2_scaling_configuration {
-    max_capacity = 2.0   # 2 ACUs max (cost control)
-    min_capacity = 0.5   # 0.5 ACUs min (lowest cost)
+    max_capacity = 2.0 # 2 ACUs max (cost control)
+    min_capacity = 0.5 # 0.5 ACUs min (lowest cost)
   }
 
   # Network and security
   db_subnet_group_name   = aws_db_subnet_group.bhashamitra_aurora.name
   vpc_security_group_ids = [aws_security_group.bhashamitra_aurora.id]
-  
+
   # Backup and maintenance
-  backup_retention_period = 7
-  preferred_backup_window = "03:00-04:00"
+  backup_retention_period      = 7
+  preferred_backup_window      = "03:00-04:00"
   preferred_maintenance_window = "sun:04:00-sun:05:00"
-  
+
   # Security settings
-  storage_encrypted = true
-  skip_final_snapshot = true  # Skip final snapshot for DR testing
+  storage_encrypted   = true
+  skip_final_snapshot = true # Skip final snapshot for DR testing
   # final_snapshot_identifier = "bhashamitra-aurora-final-snapshot"
-  
+
   # Performance and monitoring
   enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
-  
+
   # Enable Data API for RDS Query Editor
   enable_http_endpoint = true
-  
+
   tags = {
     Name        = "bhashamitra-aurora-cluster"
     Project     = "Bhashamitra"

@@ -56,6 +56,9 @@ public class SurfaceFormService {
         String lemmaId = requireNonBlank(req.lemmaId(), "lemmaId");
         String formNative = normalize(req.formNative());
         if (formNative == null) throw new IllegalArgumentException("formNative must be provided");
+        
+        // Validate formType is required (NOT NULL at database level) - validate early before DB operations
+        String formType = requireNonBlank(req.formType(), "formType");
 
         Lemma lemma = lemmaRepository.findById(lemmaId)
                 .orElseThrow(() -> new IllegalArgumentException("Lemma not found: " + lemmaId));
@@ -73,7 +76,8 @@ public class SurfaceFormService {
         sf.setLemma(lemma);
         sf.setFormNative(formNative);
         sf.setFormLatin(normalizeNullable(req.formLatin()));
-        sf.setFormType(normalizeNullable(req.formType()));
+        sf.setFormType(formType);
+        sf.setFeaturesJson(normalizeFeaturesJson(req.featuresJson()));
         sf.setNotes(req.notes());
 
         if (isNonBlank(actor)) {
@@ -112,6 +116,7 @@ public class SurfaceFormService {
         String beforeNative = existing.getFormNative();
         String beforeLatin = existing.getFormLatin();
         String beforeType = existing.getFormType();
+        String beforeFeaturesJson = existing.getFeaturesJson();
         String beforeNotes = existing.getNotes();
 
         // Optional uniqueness check if native changes
@@ -129,7 +134,18 @@ public class SurfaceFormService {
         }
 
         if (req.formLatin() != null) existing.setFormLatin(normalizeNullable(req.formLatin()));
-        if (req.formType() != null) existing.setFormType(normalizeNullable(req.formType()));
+        // formType is required (NOT NULL at database level) - always update if provided
+        if (req.formType() != null) {
+            String newFormType = requireNonBlank(req.formType(), "formType");
+            existing.setFormType(newFormType);
+        }
+        // featuresJson: Only update if provided in the request
+        // Frontend will only include it when:
+        // - Form type supports features AND user made changes (to update)
+        // - Otherwise, frontend omits it (to preserve original)
+        if (req.featuresJson() != null) {
+            existing.setFeaturesJson(normalizeFeaturesJson(req.featuresJson()));
+        }
         if (req.notes() != null) existing.setNotes(req.notes());
 
         if (isNonBlank(actor)) {
@@ -142,12 +158,14 @@ public class SurfaceFormService {
         before.put("formNative", beforeNative);
         before.put("formLatin", beforeLatin);
         before.put("formType", beforeType);
+        before.put("featuresJson", beforeFeaturesJson);
         before.put("notes", beforeNotes);
 
         Map<String, Object> after = new LinkedHashMap<>();
         after.put("formNative", saved.getFormNative());
         after.put("formLatin", saved.getFormLatin());
         after.put("formType", saved.getFormType());
+        after.put("featuresJson", saved.getFeaturesJson());
         after.put("notes", saved.getNotes());
 
         Map<String, Object> details = new LinkedHashMap<>();
@@ -201,6 +219,7 @@ public class SurfaceFormService {
             String formNative,
             String formLatin,
             String formType,
+            String featuresJson,
             String notes
     ) {}
 
@@ -208,6 +227,7 @@ public class SurfaceFormService {
             String formNative,
             String formLatin,
             String formType,
+            String featuresJson,
             String notes
     ) {}
 
@@ -245,5 +265,20 @@ public class SurfaceFormService {
 
     private static boolean isNonBlank(String v) {
         return v != null && !v.trim().isEmpty();
+    }
+
+    /**
+     * Normalize features JSON: if empty/blank, return null; otherwise return trimmed string.
+     * Validates that it's valid JSON if not null.
+     */
+    private static String normalizeFeaturesJson(String json) {
+        if (json == null) return null;
+        String trimmed = json.trim();
+        if (trimmed.isEmpty() || trimmed.equals("null")) return null;
+        // Basic validation: should start with { and end with }
+        if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+            throw new IllegalArgumentException("featuresJson must be valid JSON object");
+        }
+        return trimmed;
     }
 }

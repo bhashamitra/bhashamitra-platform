@@ -7,5 +7,6 @@ public record PronunciationDto(
         String speaker,
         String region,
         String audioUri,
-        Integer durationMs
+        Integer durationMs,
+        Boolean isPrimary
 ) {}

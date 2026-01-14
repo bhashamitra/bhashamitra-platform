@@ -5,10 +5,10 @@ resource "aws_cognito_user_pool" "bhashamitra" {
 
   # User attributes
   username_attributes = ["email"]
-  
+
   # Email configuration
   auto_verified_attributes = ["email"]
-  
+
   # Password policy
   password_policy {
     minimum_length    = 12
@@ -61,13 +61,13 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
   user_pool_id = aws_cognito_user_pool.bhashamitra.id
 
   # Client settings
-  generate_secret = false  # For web apps, no client secret needed
-  
+  generate_secret = false # For web apps, no client secret needed
+
   # Token validity
-  access_token_validity  = 1   # 1 hour
-  id_token_validity     = 1   # 1 hour  
-  refresh_token_validity = 30  # 30 days
-  
+  access_token_validity  = 1  # 1 hour
+  id_token_validity      = 1  # 1 hour  
+  refresh_token_validity = 30 # 30 days
+
   token_validity_units {
     access_token  = "hours"
     id_token      = "hours"
@@ -82,9 +82,9 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
 
   # OAuth configuration for Hosted UI
   allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_flows = ["code"]
-  allowed_oauth_scopes = ["openid", "email", "profile"]
-  
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
+
   # Callback and logout URLs (Spring Security OAuth2 defaults)
   callback_urls = [
     "https://bhashamitra.com/login/oauth2/code/cognito",
@@ -97,7 +97,7 @@ resource "aws_cognito_user_pool_client" "bhashamitra_app" {
     "https://www.bhashamitra.com/",
     "http://localhost:8080/"
   ]
-  
+
   # Identity providers
   supported_identity_providers = ["COGNITO"]
 
@@ -140,7 +140,7 @@ resource "aws_cognito_user_group" "admin" {
 # SSL Certificate for auth.bhashamitra.com (MUST be in us-east-1 for Cognito)
 resource "aws_acm_certificate" "cognito_auth" {
   provider = aws.us_east_1
-  
+
   domain_name       = "auth.bhashamitra.com"
   validation_method = "DNS"
 
@@ -176,7 +176,7 @@ resource "aws_route53_record" "cognito_auth_cert_validation" {
 # Certificate validation
 resource "aws_acm_certificate_validation" "cognito_auth" {
   provider = aws.us_east_1
-  
+
   certificate_arn         = aws_acm_certificate.cognito_auth.arn
   validation_record_fqdns = [for record in aws_route53_record.cognito_auth_cert_validation : record.fqdn]
 

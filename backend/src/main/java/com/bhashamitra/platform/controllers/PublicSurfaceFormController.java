@@ -44,6 +44,7 @@ public class PublicSurfaceFormController {
                 sf.getFormNative(),
                 sf.getFormLatin(),
                 sf.getFormType(),
+                sf.getFeaturesJson(),
                 sf.getNotes()
         );
     }

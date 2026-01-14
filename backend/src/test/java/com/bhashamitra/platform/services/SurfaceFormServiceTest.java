@@ -172,7 +172,7 @@ class SurfaceFormServiceTest {
     void create_ShouldCreateSurfaceFormSuccessfully() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "namaskara", "oblique", "Oblique case form"
+                "lemma-123", "नमस्कारा", "namaskara", "oblique", null, "Oblique case form"
         );
         String actor = "admin@example.com";
         
@@ -207,7 +207,7 @@ class SurfaceFormServiceTest {
     void create_ShouldNormalizeAndTrimInputFields() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "  lemma-123  ", "  नमस्कारा  ", "  namaskara  ", "  oblique  ", "Oblique case form"
+                "  lemma-123  ", "  नमस्कारा  ", "  namaskara  ", "  oblique  ", null, "Oblique case form"
         );
         String actor = "admin@example.com";
         
@@ -237,7 +237,7 @@ class SurfaceFormServiceTest {
     void create_ShouldConvertEmptyStringsToNullForOptionalFields() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "   ", "   ", "Notes"
+                "lemma-123", "नमस्कारा", "   ", "infinitive", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -255,8 +255,44 @@ class SurfaceFormServiceTest {
         
         SurfaceForm capturedForm = formCaptor.getValue();
         assertNull(capturedForm.getFormLatin());
-        assertNull(capturedForm.getFormType());
+        assertEquals("infinitive", capturedForm.getFormType()); // formType is required
         assertEquals("Notes", capturedForm.getNotes()); // notes kept as-is
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for null formType")
+    void create_ShouldThrowExceptionForNullFormType() {
+        // Given
+        SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
+                "lemma-123", "नमस्कारा", "namaskara", null, null, "Notes"
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                surfaceFormService.create(request, actor)
+        );
+        assertEquals("formType must be provided", exception.getMessage());
+        verify(lemmaRepository, never()).findById(any());
+        verify(surfaceFormRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create - Should throw exception for blank formType")
+    void create_ShouldThrowExceptionForBlankFormType() {
+        // Given
+        SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
+                "lemma-123", "नमस्कारा", "namaskara", "   ", null, "Notes"
+        );
+        String actor = "admin@example.com";
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                surfaceFormService.create(request, actor)
+        );
+        assertEquals("formType must be provided", exception.getMessage());
+        verify(lemmaRepository, never()).findById(any());
+        verify(surfaceFormRepository, never()).save(any());
     }
 
     @Test
@@ -264,7 +300,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForNullLemmaId() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                null, "नमस्कारा", "namaskara", "oblique", "Notes"
+                null, "नमस्कारा", "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
 
@@ -282,7 +318,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForNullFormNative() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", null, "namaskara", "oblique", "Notes"
+                "lemma-123", null, "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -304,7 +340,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForBlankFormNative() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "   ", "namaskara", "oblique", "Notes"
+                "lemma-123", "   ", "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -326,7 +362,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForNonexistentLemma() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "nonexistent-lemma", "नमस्कारा", "namaskara", "oblique", "Notes"
+                "nonexistent-lemma", "नमस्कारा", "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -346,7 +382,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForDisabledLanguage() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "namaskara", "oblique", "Notes"
+                "lemma-123", "नमस्कारा", "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -367,7 +403,7 @@ class SurfaceFormServiceTest {
     void create_ShouldThrowExceptionForDuplicateSurfaceForm() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "namaskara", "oblique", "Notes"
+                "lemma-123", "नमस्कारा", "namaskara", "oblique", null, "Notes"
         );
         String actor = "admin@example.com";
         
@@ -389,7 +425,7 @@ class SurfaceFormServiceTest {
     void create_ShouldHandleNullActorGracefully() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "namaskara", "oblique", "Notes"
+                "lemma-123", "नमस्कारा", "namaskara", "oblique", null, "Notes"
         );
         
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
@@ -419,7 +455,7 @@ class SurfaceFormServiceTest {
         // Given
         String id = "surface-123";
         SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
-                "नमस्कारांना", "namaskarana", "dative", "Dative case form"
+                "नमस्कारांना", "namaskarana", "dative", null, "Dative case form"
         );
         String actor = "editor@example.com";
         
@@ -459,7 +495,7 @@ class SurfaceFormServiceTest {
         // Given
         String id = "surface-123";
         SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
-                null, "new-latin", null, null
+                null, "new-latin", "oblique", null, null
         );
         String actor = "editor@example.com";
         
@@ -476,8 +512,30 @@ class SurfaceFormServiceTest {
         SurfaceForm capturedForm = formCaptor.getValue();
         assertEquals("नमस्कारा", capturedForm.getFormNative()); // unchanged
         assertEquals("new-latin", capturedForm.getFormLatin()); // updated
-        assertEquals("oblique", capturedForm.getFormType()); // unchanged
+        assertEquals("oblique", capturedForm.getFormType()); // updated (formType is required when provided)
         assertEquals("Oblique case form", capturedForm.getNotes()); // unchanged
+    }
+
+    @Test
+    @DisplayName("update - Should throw exception for blank formType")
+    void update_ShouldThrowExceptionForBlankFormType() {
+        // Given
+        String id = "surface-123";
+        // Note: formType is optional in UpdateSurfaceFormRequest (can be null for partial updates)
+        // But if provided, it must not be blank (enforced in service)
+        SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
+                null, null, "   ", null, null
+        );
+        String actor = "editor@example.com";
+        
+        when(surfaceFormRepository.findById(id)).thenReturn(Optional.of(sampleSurfaceForm));
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                surfaceFormService.update(id, request, actor)
+        );
+        assertEquals("formType must be provided", exception.getMessage());
+        verify(surfaceFormRepository, never()).save(any());
     }
 
     @Test
@@ -486,7 +544,7 @@ class SurfaceFormServiceTest {
         // Given
         String id = "surface-123";
         SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
-                "existing-form", null, null, null
+                "existing-form", null, null, null, null
         );
         String actor = "editor@example.com";
         
@@ -507,7 +565,7 @@ class SurfaceFormServiceTest {
         // Given
         String id = "surface-123";
         SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
-                "   ", null, null, null
+                "   ", null, null, null, null
         );
         String actor = "editor@example.com";
         
@@ -527,7 +585,7 @@ class SurfaceFormServiceTest {
         // Given
         String id = "surface-123";
         SurfaceFormUpdateRequest request = new SurfaceFormUpdateRequest(
-                null, "new-latin", "new-type", null
+                null, "new-latin", "infinitive", null, null
         );
         String actor = "editor@example.com";
         
@@ -624,7 +682,7 @@ class SurfaceFormServiceTest {
     void create_ShouldHandleUnicodeContentCorrectly() {
         // Given
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारांच्या", "namaskarancha", "genitive", "मराठी भाषेतील संबोधन पदाचा जेनिटिव्ह रूप"
+                "lemma-123", "नमस्कारांच्या", "namaskarancha", "genitive", null, "मराठी भाषेतील संबोधन पदाचा जेनिटिव्ह रूप"
         );
         String actor = "linguist@example.com";
         
@@ -656,7 +714,7 @@ class SurfaceFormServiceTest {
         
         // 1. Create surface form
         SurfaceFormCreateRequest createRequest = new SurfaceFormCreateRequest(
-                "lemma-123", "नमस्कारा", "namaskara", "oblique", "Oblique case"
+                "lemma-123", "नमस्कारा", "namaskara", "oblique", null, "Oblique case"
         );
         
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
@@ -668,7 +726,7 @@ class SurfaceFormServiceTest {
 
         // 2. Update surface form
         SurfaceFormUpdateRequest updateRequest = new SurfaceFormUpdateRequest(
-                null, "new-namaskara", "oblique_alt", "Alternative oblique form"
+                null, "new-namaskara", "oblique_alt", null, "Alternative oblique form"
         );
         when(surfaceFormRepository.findById(formId)).thenReturn(Optional.of(sampleSurfaceForm));
         
@@ -694,7 +752,7 @@ class SurfaceFormServiceTest {
         disabledLangLemma.setLemmaNative("test");
         
         SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                "lemma-disabled", "test-form", null, null, null
+                "lemma-disabled", "test-form", null, "infinitive", null, null
         );
         String actor = "admin@example.com";
         
@@ -724,7 +782,7 @@ class SurfaceFormServiceTest {
         assertEquals("lemmaId must be provided", exception1.getMessage());
 
         // Test create with blank lemma ID
-        SurfaceFormCreateRequest createRequest = new SurfaceFormCreateRequest("", "form", null, null, null);
+        SurfaceFormCreateRequest createRequest = new SurfaceFormCreateRequest("", "form", null, null, null, null);
         IllegalArgumentException exception2 = assertThrows(IllegalArgumentException.class, () ->
                 surfaceFormService.create(createRequest, "actor")
         );
@@ -746,9 +804,10 @@ class SurfaceFormServiceTest {
         when(surfaceFormRepository.existsByLemma_IdAndFormNative(any(), any())).thenReturn(false);
         when(surfaceFormRepository.save(any(SurfaceForm.class))).thenReturn(sampleSurfaceForm);
 
-        // Test different form types
-        String[] formTypes = {"direct", "oblique", "dative", "genitive", "locative", "instrumental", "vocative", "plural", null, ""};
-        String[] expectedTypes = {"direct", "oblique", "dative", "genitive", "locative", "instrumental", "vocative", "plural", null, null};
+        // Test different form types (only valid non-null, non-empty values)
+        String[] formTypes = {"infinitive", "finite_verb_present", "finite_verb_past", "finite_verb_future", 
+                              "progressive_continuous", "imperative", "participle", "conjunctive_gerund", 
+                              "colloquial_spoken", "compound_verb_form"};
 
         for (int i = 0; i < formTypes.length; i++) {
             // Reset mock
@@ -757,7 +816,7 @@ class SurfaceFormServiceTest {
             when(surfaceFormRepository.save(any(SurfaceForm.class))).thenReturn(sampleSurfaceForm);
 
             SurfaceFormCreateRequest request = new SurfaceFormCreateRequest(
-                    "lemma-" + i, "form-" + i, null, formTypes[i], null
+                    "lemma-" + i, "form-" + i, null, formTypes[i], null, null
             );
 
             // When
@@ -768,7 +827,7 @@ class SurfaceFormServiceTest {
             verify(surfaceFormRepository).save(formCaptor.capture());
             
             SurfaceForm capturedForm = formCaptor.getValue();
-            assertEquals(expectedTypes[i], capturedForm.getFormType(), 
+            assertEquals(formTypes[i], capturedForm.getFormType(), 
                     "Form type mismatch for input: " + formTypes[i]);
         }
     }

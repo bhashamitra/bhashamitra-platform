@@ -3,9 +3,13 @@ package com.bhashamitra.platform.services;
 import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaSentenceLink;
 import com.bhashamitra.platform.models.LemmaSentenceLinkType;
+import com.bhashamitra.platform.models.Meaning;
+import com.bhashamitra.platform.models.SurfaceForm;
 import com.bhashamitra.platform.models.UsageSentence;
 import com.bhashamitra.platform.repositories.LemmaRepository;
 import com.bhashamitra.platform.repositories.LemmaSentenceLinkRepository;
+import com.bhashamitra.platform.repositories.MeaningRepository;
+import com.bhashamitra.platform.repositories.SurfaceFormRepository;
 import com.bhashamitra.platform.repositories.UsageSentenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,15 +26,21 @@ public class LemmaSentenceLinkService {
     private final LemmaSentenceLinkRepository repository;
     private final LemmaRepository lemmaRepository;
     private final UsageSentenceRepository usageSentenceRepository;
+    private final MeaningRepository meaningRepository;
+    private final SurfaceFormRepository surfaceFormRepository;
     private final AuditService auditService;
 
     public LemmaSentenceLinkService(LemmaSentenceLinkRepository repository,
                                     LemmaRepository lemmaRepository,
                                     UsageSentenceRepository usageSentenceRepository,
+                                    MeaningRepository meaningRepository,
+                                    SurfaceFormRepository surfaceFormRepository,
                                     AuditService auditService) {
         this.repository = repository;
         this.lemmaRepository = lemmaRepository;
         this.usageSentenceRepository = usageSentenceRepository;
+        this.meaningRepository = meaningRepository;
+        this.surfaceFormRepository = surfaceFormRepository;
         this.auditService = auditService;
     }
 
@@ -77,10 +87,35 @@ public class LemmaSentenceLinkService {
         UsageSentence sentence = usageSentenceRepository.findById(sentenceId)
                 .orElseThrow(() -> new IllegalArgumentException("UsageSentence not found: " + sentenceId));
 
+        // Validate meaningId if provided
+        String meaningId = normalizeNullable(req.meaningId());
+        if (meaningId != null) {
+            Meaning meaning = meaningRepository.findById(meaningId)
+                    .orElseThrow(() -> new IllegalArgumentException("Meaning not found: " + meaningId));
+            if (!meaning.getLemma().getId().equals(lemmaId)) {
+                throw new IllegalArgumentException(
+                        "Meaning " + meaningId + " does not belong to lemma " + lemmaId
+                );
+            }
+        }
+
+        // Validate surfaceFormId if provided
+        String surfaceFormId = normalizeNullable(req.surfaceFormId());
+        if (surfaceFormId != null) {
+            SurfaceForm surfaceForm = surfaceFormRepository.findById(surfaceFormId)
+                    .orElseThrow(() -> new IllegalArgumentException("SurfaceForm not found: " + surfaceFormId));
+            if (!surfaceForm.getLemma().getId().equals(lemmaId)) {
+                throw new IllegalArgumentException(
+                        "SurfaceForm " + surfaceFormId + " does not belong to lemma " + lemmaId
+                );
+            }
+        }
+
         LemmaSentenceLink link = new LemmaSentenceLink();
         link.setLemma(lemma);
         link.setSentence(sentence);
-        link.setSurfaceFormId(normalizeNullable(req.surfaceFormId()));
+        link.setMeaningId(meaningId);
+        link.setSurfaceFormId(surfaceFormId);
         link.setLinkType(resolveLinkType(req.linkType()));
 
         if (isNonBlank(actor)) {
@@ -93,6 +128,7 @@ public class LemmaSentenceLinkService {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("lemmaId", lemmaId);
         details.put("sentenceId", sentenceId);
+        details.put("meaningId", saved.getMeaningId());
         details.put("surfaceFormId", saved.getSurfaceFormId());
         details.put("linkType", saved.getLinkType().name());
 
@@ -116,11 +152,39 @@ public class LemmaSentenceLinkService {
     public LemmaSentenceLink update(String id, UpdateRequest req, String actor) {
         LemmaSentenceLink existing = getById(id);
 
+        String lemmaId = existing.getLemma().getId();
+        String beforeMeaningId = existing.getMeaningId();
         String beforeSurfaceFormId = existing.getSurfaceFormId();
         LemmaSentenceLinkType beforeType = existing.getLinkType();
 
+        // Validate and update meaningId if provided
+        if (req.meaningId() != null) {
+            String meaningId = normalizeNullable(req.meaningId());
+            if (meaningId != null) {
+                Meaning meaning = meaningRepository.findById(meaningId)
+                        .orElseThrow(() -> new IllegalArgumentException("Meaning not found: " + meaningId));
+                if (!meaning.getLemma().getId().equals(lemmaId)) {
+                    throw new IllegalArgumentException(
+                            "Meaning " + meaningId + " does not belong to lemma " + lemmaId
+                    );
+                }
+            }
+            existing.setMeaningId(meaningId);
+        }
+
+        // Validate and update surfaceFormId if provided
         if (req.surfaceFormId() != null) {
-            existing.setSurfaceFormId(normalizeNullable(req.surfaceFormId()));
+            String surfaceFormId = normalizeNullable(req.surfaceFormId());
+            if (surfaceFormId != null) {
+                SurfaceForm surfaceForm = surfaceFormRepository.findById(surfaceFormId)
+                        .orElseThrow(() -> new IllegalArgumentException("SurfaceForm not found: " + surfaceFormId));
+                if (!surfaceForm.getLemma().getId().equals(lemmaId)) {
+                    throw new IllegalArgumentException(
+                            "SurfaceForm " + surfaceFormId + " does not belong to lemma " + lemmaId
+                    );
+                }
+            }
+            existing.setSurfaceFormId(surfaceFormId);
         }
         if (req.linkType() != null) {
             existing.setLinkType(resolveLinkType(req.linkType()));
@@ -133,10 +197,12 @@ public class LemmaSentenceLinkService {
         LemmaSentenceLink saved = repository.save(existing);
 
         Map<String, Object> before = new LinkedHashMap<>();
+        before.put("meaningId", beforeMeaningId);
         before.put("surfaceFormId", beforeSurfaceFormId);
         before.put("linkType", beforeType.name());
 
         Map<String, Object> after = new LinkedHashMap<>();
+        after.put("meaningId", saved.getMeaningId());
         after.put("surfaceFormId", saved.getSurfaceFormId());
         after.put("linkType", saved.getLinkType().name());
 
@@ -169,6 +235,7 @@ public class LemmaSentenceLinkService {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("lemmaId", existing.getLemma().getId());
         details.put("sentenceId", existing.getSentence().getId());
+        details.put("meaningId", existing.getMeaningId());
         details.put("surfaceFormId", existing.getSurfaceFormId());
         details.put("linkType", existing.getLinkType().name());
 
@@ -191,11 +258,13 @@ public class LemmaSentenceLinkService {
     public record CreateRequest(
             String lemmaId,
             String sentenceId,
+            String meaningId,
             String surfaceFormId,
             String linkType
     ) {}
 
     public record UpdateRequest(
+            String meaningId,
             String surfaceFormId,
             String linkType
     ) {}

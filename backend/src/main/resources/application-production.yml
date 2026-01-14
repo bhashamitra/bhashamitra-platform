@@ -16,3 +16,10 @@ management:
       # Don't show sensitive details in production
       show-details: never
 
+
+# --- AWS S3 Configuration (Production environment) ---
+aws:
+  s3:
+    bucket:
+      name: ${AWS_S3_BUCKET_NAME:bhashamitra-audio-prod}
+

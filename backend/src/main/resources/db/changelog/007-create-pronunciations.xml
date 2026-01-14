@@ -12,7 +12,10 @@
             <column name="id" type="CHAR(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false"
+                    remarks="Primary surface-form indicator (surface_forms only). Not related to pronunciation; primary pronunciations are defined at the lemma level in pronunciations.">
+                <constraints nullable="false"/>
+            </column>
             <column name="owner_type" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>

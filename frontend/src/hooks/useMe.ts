@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "../utils/apiClient";
 
 export type MeResponse = {
     email?: string;
@@ -15,8 +16,7 @@ export function useMe() {
 
         async function loadMe() {
             try {
-                const res = await fetch("/api/me", {
-                    credentials: "include",
+                const res = await apiFetch("/api/me", {
                     signal: ac.signal,
                     headers: { Accept: "application/json" },
                 });

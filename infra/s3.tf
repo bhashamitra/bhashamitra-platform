@@ -1,9 +1,9 @@
-# S3 bucket for audio files storage
+# S3 bucket for audio files storage (Production)
 resource "aws_s3_bucket" "bhashamitra_audio" {
   bucket = "bhashamitra-audio-prod"
 
   tags = {
-    Name        = "Bhashamitra Audio Files"
+    Name        = "Bhashamitra Audio Files - Production"
     Environment = "production"
     Purpose     = "audio-storage"
   }
@@ -76,6 +76,81 @@ resource "aws_s3_bucket_cors_configuration" "bhashamitra_audio" {
       "https://www.bhashamitra.com",
       "http://localhost:8080",
       "http://localhost:3000"
+    ]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+# S3 bucket for audio files storage (Development/Local)
+resource "aws_s3_bucket" "bhashamitra_audio_dev" {
+  bucket = "bhashamitra-audio-dev"
+
+  tags = {
+    Name        = "Bhashamitra Audio Files - Development"
+    Environment = "development"
+    Purpose     = "audio-storage"
+  }
+}
+
+# Block all public access
+resource "aws_s3_bucket_public_access_block" "bhashamitra_audio_dev" {
+  bucket = aws_s3_bucket.bhashamitra_audio_dev.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Bucket ownership controls (recommended for modern S3 buckets)
+resource "aws_s3_bucket_ownership_controls" "bhashamitra_audio_dev" {
+  bucket = aws_s3_bucket.bhashamitra_audio_dev.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+# Enable default encryption (SSE-S3)
+resource "aws_s3_bucket_server_side_encryption_configuration" "bhashamitra_audio_dev" {
+  bucket = aws_s3_bucket.bhashamitra_audio_dev.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+# Lifecycle configuration for dev (shorter retention, no storage class transition)
+resource "aws_s3_bucket_lifecycle_configuration" "bhashamitra_audio_dev" {
+  bucket = aws_s3_bucket.bhashamitra_audio_dev.id
+
+  rule {
+    id     = "audio_lifecycle_dev"
+    status = "Enabled"
+
+    # Delete incomplete multipart uploads after 3 days (shorter for dev)
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 3
+    }
+  }
+}
+
+# CORS configuration for web access and uploads (dev allows localhost)
+resource "aws_s3_bucket_cors_configuration" "bhashamitra_audio_dev" {
+  bucket = aws_s3_bucket.bhashamitra_audio_dev.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD", "PUT", "POST"]
+    allowed_origins = [
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "http://127.0.0.1:8080",
+      "http://127.0.0.1:3000"
     ]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000

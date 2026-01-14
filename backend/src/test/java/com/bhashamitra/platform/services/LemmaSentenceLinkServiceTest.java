@@ -4,10 +4,14 @@ import com.bhashamitra.platform.models.Lemma;
 import com.bhashamitra.platform.models.LemmaStatus;
 import com.bhashamitra.platform.models.LemmaSentenceLink;
 import com.bhashamitra.platform.models.LemmaSentenceLinkType;
+import com.bhashamitra.platform.models.Meaning;
+import com.bhashamitra.platform.models.SurfaceForm;
 import com.bhashamitra.platform.models.UsageSentence;
 import com.bhashamitra.platform.models.UsageSentenceStatus;
 import com.bhashamitra.platform.repositories.LemmaRepository;
 import com.bhashamitra.platform.repositories.LemmaSentenceLinkRepository;
+import com.bhashamitra.platform.repositories.MeaningRepository;
+import com.bhashamitra.platform.repositories.SurfaceFormRepository;
 import com.bhashamitra.platform.repositories.UsageSentenceRepository;
 import com.bhashamitra.platform.services.LemmaSentenceLinkService.CreateRequest;
 import com.bhashamitra.platform.services.LemmaSentenceLinkService.UpdateRequest;
@@ -20,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +48,12 @@ class LemmaSentenceLinkServiceTest {
     private UsageSentenceRepository usageSentenceRepository;
 
     @Mock
+    private MeaningRepository meaningRepository;
+
+    @Mock
+    private SurfaceFormRepository surfaceFormRepository;
+
+    @Mock
     private AuditService auditService;
 
     @InjectMocks
@@ -51,11 +62,14 @@ class LemmaSentenceLinkServiceTest {
     private LemmaSentenceLink sampleLink;
     private Lemma sampleLemma;
     private UsageSentence sampleSentence;
+    private SurfaceForm sampleSurfaceForm;
+    private Meaning sampleMeaning;
 
     @BeforeEach
     void setUp() {
         // Setup sample lemma
         sampleLemma = new Lemma();
+        setEntityId(sampleLemma, "lemma-123"); // Set ID for validation checks
         sampleLemma.setLanguage("mr");
         sampleLemma.setLemmaNative("नमस्कार");
         sampleLemma.setLemmaLatin("namaskar");
@@ -64,12 +78,27 @@ class LemmaSentenceLinkServiceTest {
 
         // Setup sample usage sentence
         sampleSentence = new UsageSentence();
+        setEntityId(sampleSentence, "sentence-123"); // Set ID for validation checks
         sampleSentence.setLanguage("mr");
         sampleSentence.setSentenceNative("मी तुम्हाला नमस्कार करतो.");
         sampleSentence.setSentenceLatin("Mi tumhala namaskar karto.");
         sampleSentence.setTranslation("I greet you.");
         sampleSentence.setRegister("neutral");
         sampleSentence.setStatus(UsageSentenceStatus.PUBLISHED);
+
+        // Setup sample surface form
+        sampleSurfaceForm = new SurfaceForm();
+        sampleSurfaceForm.setLemma(sampleLemma);
+        sampleSurfaceForm.setFormNative("नमस्कार");
+        sampleSurfaceForm.setFormLatin("namaskar");
+        sampleSurfaceForm.setFormType("infinitive");
+
+        // Setup sample meaning
+        sampleMeaning = new Meaning();
+        sampleMeaning.setLemma(sampleLemma);
+        sampleMeaning.setMeaningLanguage("en");
+        sampleMeaning.setMeaningText("greeting");
+        sampleMeaning.setPriority(1);
 
         // Setup sample link
         sampleLink = new LemmaSentenceLink();
@@ -217,13 +246,14 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldCreateLinkWithDefaultExactType() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "sentence-123", "surface-123", null
+                "lemma-123", "sentence-123", null, "surface-123", null
         );
         String actor = "admin@example.com";
         
         when(repository.existsByLemma_IdAndSentence_Id("lemma-123", "sentence-123")).thenReturn(false);
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
         when(usageSentenceRepository.findById("sentence-123")).thenReturn(Optional.of(sampleSentence));
+        when(surfaceFormRepository.findById("surface-123")).thenReturn(Optional.of(sampleSurfaceForm));
         when(repository.save(any(LemmaSentenceLink.class))).thenReturn(sampleLink);
 
         // When
@@ -251,7 +281,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldCreateLinkWithSpecifiedType() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "sentence-123", null, "INFLECTED"
+                "lemma-123", "sentence-123", null, null, "INFLECTED"
         );
         String actor = "admin@example.com";
         
@@ -276,13 +306,14 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldNormalizeAndTrimInputFields() {
         // Given
         CreateRequest request = new CreateRequest(
-                "  lemma-123  ", "  sentence-123  ", "  surface-123  ", "  EXACT  "
+                "  lemma-123  ", "  sentence-123  ", null, "  surface-123  ", "  EXACT  "
         );
         String actor = "admin@example.com";
         
         when(repository.existsByLemma_IdAndSentence_Id("lemma-123", "sentence-123")).thenReturn(false);
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
         when(usageSentenceRepository.findById("sentence-123")).thenReturn(Optional.of(sampleSentence));
+        when(surfaceFormRepository.findById("surface-123")).thenReturn(Optional.of(sampleSurfaceForm));
         when(repository.save(any(LemmaSentenceLink.class))).thenReturn(sampleLink);
 
         // When
@@ -306,7 +337,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldConvertEmptySurfaceFormIdToNull() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "sentence-123", "   ", "EXACT"
+                "lemma-123", "sentence-123", null, "   ", "EXACT"
         );
         String actor = "admin@example.com";
         
@@ -331,7 +362,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldThrowExceptionForDuplicateLink() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "sentence-123", "surface-123", "EXACT"
+                "lemma-123", "sentence-123", null, "surface-123", "EXACT"
         );
         String actor = "admin@example.com";
         
@@ -353,7 +384,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldThrowExceptionForNullLemmaId() {
         // Given
         CreateRequest request = new CreateRequest(
-                null, "sentence-123", "surface-123", "EXACT"
+                null, "sentence-123", null, "surface-123", "EXACT"
         );
         String actor = "admin@example.com";
 
@@ -370,7 +401,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldThrowExceptionForNullSentenceId() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", null, "surface-123", "EXACT"
+                "lemma-123", null, null, "surface-123", "EXACT"
         );
         String actor = "admin@example.com";
 
@@ -387,7 +418,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldThrowExceptionForNonexistentLemma() {
         // Given
         CreateRequest request = new CreateRequest(
-                "nonexistent-lemma", "sentence-123", "surface-123", "EXACT"
+                "nonexistent-lemma", "sentence-123", null, "surface-123", "EXACT"
         );
         String actor = "admin@example.com";
         
@@ -408,7 +439,7 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldThrowExceptionForNonexistentSentence() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "nonexistent-sentence", "surface-123", "EXACT"
+                "lemma-123", "nonexistent-sentence", null, "surface-123", "EXACT"
         );
         String actor = "admin@example.com";
         
@@ -429,12 +460,13 @@ class LemmaSentenceLinkServiceTest {
     void create_ShouldHandleNullActorGracefully() {
         // Given
         CreateRequest request = new CreateRequest(
-                "lemma-123", "sentence-123", "surface-123", "EXACT"
+                "lemma-123", "sentence-123", null, "surface-123", "EXACT"
         );
         
         when(repository.existsByLemma_IdAndSentence_Id("lemma-123", "sentence-123")).thenReturn(false);
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
         when(usageSentenceRepository.findById("sentence-123")).thenReturn(Optional.of(sampleSentence));
+        when(surfaceFormRepository.findById("surface-123")).thenReturn(Optional.of(sampleSurfaceForm));
         when(repository.save(any(LemmaSentenceLink.class))).thenReturn(sampleLink);
 
         // When
@@ -459,10 +491,15 @@ class LemmaSentenceLinkServiceTest {
         // Given
         String id = "link-123";
         UpdateRequest request = new UpdateRequest(
-                "new-surface-456", "IMPLIED"
+                null, "new-surface-456", "IMPLIED"
         );
         String actor = "editor@example.com";
         
+        SurfaceForm newSurfaceForm = new SurfaceForm();
+        newSurfaceForm.setLemma(sampleLemma);
+        newSurfaceForm.setFormNative("नमस्कार");
+        newSurfaceForm.setFormType("infinitive");
+
         LemmaSentenceLink updatedLink = new LemmaSentenceLink();
         updatedLink.setLemma(sampleLemma);
         updatedLink.setSentence(sampleSentence);
@@ -470,6 +507,7 @@ class LemmaSentenceLinkServiceTest {
         updatedLink.setLinkType(LemmaSentenceLinkType.IMPLIED);
         
         when(repository.findById(id)).thenReturn(Optional.of(sampleLink));
+        when(surfaceFormRepository.findById("new-surface-456")).thenReturn(Optional.of(newSurfaceForm));
         when(repository.save(any(LemmaSentenceLink.class))).thenReturn(updatedLink);
 
         // When
@@ -495,7 +533,7 @@ class LemmaSentenceLinkServiceTest {
         // Given
         String id = "link-123";
         UpdateRequest request = new UpdateRequest(
-                null, "IMPLIED"
+                null, null, "IMPLIED"
         );
         String actor = "editor@example.com";
         
@@ -520,7 +558,7 @@ class LemmaSentenceLinkServiceTest {
         // Given
         String id = "link-123";
         UpdateRequest request = new UpdateRequest(
-                "   ", null
+                null, "   ", null
         );
         String actor = "editor@example.com";
         
@@ -609,7 +647,7 @@ class LemmaSentenceLinkServiceTest {
             when(repository.save(any(LemmaSentenceLink.class))).thenReturn(sampleLink);
 
             CreateRequest request = new CreateRequest(
-                    "lemma-" + i, "sentence-" + i, null, linkTypes[i]
+                    "lemma-" + i, "sentence-" + i, null, null, linkTypes[i]
             );
 
             // When
@@ -692,6 +730,17 @@ class LemmaSentenceLinkServiceTest {
         verify(repository).findBySentence_IdOrderByCreatedDateDescIdDesc("sentence-123");
     }
 
+    // Helper method to set entity ID using reflection
+    private void setEntityId(Object entity, String id) {
+        try {
+            Field idField = entity.getClass().getSuperclass().getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(entity, id);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set entity ID", e);
+        }
+    }
+
     @Test
     @DisplayName("Complex workflow - Should handle complete link lifecycle")
     void complexWorkflow_ShouldHandleCompleteLinkLifecycle() {
@@ -701,19 +750,26 @@ class LemmaSentenceLinkServiceTest {
         
         // 1. Create link
         CreateRequest createRequest = new CreateRequest(
-                "lemma-123", "sentence-123", "surface-123", "EXACT"
+                "lemma-123", "sentence-123", null, "surface-123", "EXACT"
         );
         
         when(repository.existsByLemma_IdAndSentence_Id("lemma-123", "sentence-123")).thenReturn(false);
         when(lemmaRepository.findById("lemma-123")).thenReturn(Optional.of(sampleLemma));
         when(usageSentenceRepository.findById("sentence-123")).thenReturn(Optional.of(sampleSentence));
+        when(surfaceFormRepository.findById("surface-123")).thenReturn(Optional.of(sampleSurfaceForm));
         when(repository.save(any(LemmaSentenceLink.class))).thenReturn(sampleLink);
 
         linkService.create(createRequest, actor);
 
         // 2. Update link
-        UpdateRequest updateRequest = new UpdateRequest("new-surface-456", "IMPLIED");
+        SurfaceForm newSurfaceForm = new SurfaceForm();
+        newSurfaceForm.setLemma(sampleLemma);
+        newSurfaceForm.setFormNative("नमस्कार");
+        newSurfaceForm.setFormType("infinitive");
+        
+        UpdateRequest updateRequest = new UpdateRequest(null, "new-surface-456", "IMPLIED");
         when(repository.findById(linkId)).thenReturn(Optional.of(sampleLink));
+        when(surfaceFormRepository.findById("new-surface-456")).thenReturn(Optional.of(newSurfaceForm));
         
         linkService.update(linkId, updateRequest, actor);
 
@@ -746,14 +802,14 @@ class LemmaSentenceLinkServiceTest {
         assertEquals("sentenceId must be provided", exception2.getMessage());
 
         // Test create with blank lemma ID
-        CreateRequest createRequest = new CreateRequest("", "sentence-123", null, null);
+        CreateRequest createRequest = new CreateRequest("", "sentence-123", null, null, null);
         IllegalArgumentException exception3 = assertThrows(IllegalArgumentException.class, () ->
                 linkService.create(createRequest, "actor")
         );
         assertEquals("lemmaId must be provided", exception3.getMessage());
 
         // Test create with blank sentence ID
-        CreateRequest createRequest2 = new CreateRequest("lemma-123", "", null, null);
+        CreateRequest createRequest2 = new CreateRequest("lemma-123", "", null, null, null);
         IllegalArgumentException exception4 = assertThrows(IllegalArgumentException.class, () ->
                 linkService.create(createRequest2, "actor")
         );

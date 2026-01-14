@@ -23,6 +23,7 @@
         <liquibase.version>5.0.1</liquibase.version>
         <mysql.connector.version>9.5.0</mysql.connector.version>
         <lombok.version>1.18.42</lombok.version>
+        <aws.sdk.version>2.20.0</aws.sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -86,6 +87,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- AWS S3 SDK -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
+            <version>${aws.sdk.version}</version>
         </dependency>
 
         <!-- Lombok -->

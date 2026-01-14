@@ -37,11 +37,36 @@ Starting with **Marathi** and expanding to **Hindi**, **Gujarati**, and other la
 
 ### Running Locally
 
+#### Quick Start (Recommended)
+
+For the fastest development workflow, use the provided rebuild-and-run script:
+
+```bash
+# Build with tests, then run (stops any running instance first)
+./rebuild-and-run.sh
+```
+
+**What this script does:**
+- ✅ Stops any running Spring Boot instance on port 8080
+- ✅ Runs `mvn clean package` (includes all tests)
+- ✅ Only starts the app if tests pass (prevents running with broken code)
+- ✅ Starts Spring Boot with the local profile
+
+**Why use this script:**
+- Saves time: Single command vs typing multiple commands
+- Safety: Tests must pass before app starts (catch errors early)
+- Port management: Automatically frees up port 8080 if needed
+- Consistency: Same workflow every time you test changes
+
+#### Manual Approach
+
+If you prefer manual control:
+
 ```bash
 # Backend (with local profile)
 cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=local
 
-# Frontend development (optional)
+# Frontend development (optional - if you want separate dev server)
 cd frontend && npm install && npm run dev
 
 # Access points

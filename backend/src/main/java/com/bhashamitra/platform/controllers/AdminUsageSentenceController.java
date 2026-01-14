@@ -1,12 +1,15 @@
 package com.bhashamitra.platform.controllers;
 
 import com.bhashamitra.platform.controllers.dto.CreateUsageSentenceRequest;
+import com.bhashamitra.platform.controllers.dto.PagedSentencesResponse;
 import com.bhashamitra.platform.controllers.dto.UpdateUsageSentenceRequest;
 import com.bhashamitra.platform.controllers.dto.UsageSentenceDto;
+import com.bhashamitra.platform.controllers.dto.UsageSentenceSearchRequest;
 import com.bhashamitra.platform.models.UsageSentence;
 import com.bhashamitra.platform.models.UsageSentenceStatus;
 import com.bhashamitra.platform.services.UsageSentenceService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +33,7 @@ public class AdminUsageSentenceController {
     // --------------------
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsageSentenceDto> getById(@PathVariable String id) {
+    public ResponseEntity<UsageSentenceDto> getById(@PathVariable("id") String id) {
         try {
             return ResponseEntity.ok(toDto(usageSentenceService.getById(id)));
         } catch (IllegalArgumentException e) {
@@ -38,22 +41,36 @@ public class AdminUsageSentenceController {
         }
     }
 
-    // List all sentences for a language (all statuses)
+    // Search sentences with pagination, sorting, and filtering
     @GetMapping
-    public List<UsageSentenceDto> listByLanguage(
-            @RequestParam String language,
-            @RequestParam(required = false) String status
+    public PagedSentencesResponse searchSentences(
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "language", defaultValue = "mr") String language,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sort", defaultValue = "sentenceNative") String sort,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction
     ) {
-        List<UsageSentence> out;
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                search, language, status, page, size, sort, direction
+        );
 
-        if (status == null || status.isBlank()) {
-            out = usageSentenceService.listByLanguage(language);
-        } else {
-            UsageSentenceStatus st = UsageSentenceStatus.valueOf(status.trim().toUpperCase());
-            out = usageSentenceService.listByLanguageAndStatus(language, st);
-        }
+        Page<UsageSentence> sentencePage = usageSentenceService.searchSentences(request);
 
-        return out.stream().map(AdminUsageSentenceController::toDto).toList();
+        List<UsageSentenceDto> content = sentencePage.getContent().stream()
+                .map(AdminUsageSentenceController::toDto)
+                .toList();
+
+        return new PagedSentencesResponse(
+                content,
+                sentencePage.getNumber(),
+                sentencePage.getSize(),
+                sentencePage.getTotalElements(),
+                sentencePage.getTotalPages(),
+                sentencePage.isFirst(),
+                sentencePage.isLast()
+        );
     }
 
     // --------------------
@@ -90,7 +107,7 @@ public class AdminUsageSentenceController {
     // --------------------
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsageSentenceDto> update(@PathVariable String id,
+    public ResponseEntity<UsageSentenceDto> update(@PathVariable("id") String id,
                                                    @Valid @RequestBody UpdateUsageSentenceRequest req,
                                                    Authentication auth) {
         String act = actor(auth);
@@ -125,8 +142,8 @@ public class AdminUsageSentenceController {
     // --------------------
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<UsageSentenceDto> setStatus(@PathVariable String id,
-                                                      @RequestParam String status,
+    public ResponseEntity<UsageSentenceDto> setStatus(@PathVariable("id") String id,
+                                                      @RequestParam("status") String status,
                                                       Authentication auth) {
         String act = actor(auth);
 
@@ -140,7 +157,7 @@ public class AdminUsageSentenceController {
     }
 
     @PutMapping("/{id}/archive")
-    public ResponseEntity<UsageSentenceDto> archive(@PathVariable String id, Authentication auth) {
+    public ResponseEntity<UsageSentenceDto> archive(@PathVariable("id") String id, Authentication auth) {
         String act = actor(auth);
         try {
             UsageSentence updated = usageSentenceService.setStatus(id, UsageSentenceStatus.ARCHIVED, act);
@@ -151,8 +168,8 @@ public class AdminUsageSentenceController {
     }
 
     @PutMapping("/{id}/unarchive")
-    public ResponseEntity<UsageSentenceDto> unarchive(@PathVariable String id,
-                                                      @RequestParam(defaultValue = "REVIEW") String status,
+    public ResponseEntity<UsageSentenceDto> unarchive(@PathVariable("id") String id,
+                                                      @RequestParam(value = "status", defaultValue = "REVIEW") String status,
                                                       Authentication auth) {
         String act = actor(auth);
         try {

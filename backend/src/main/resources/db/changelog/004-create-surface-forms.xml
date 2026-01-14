@@ -12,7 +12,6 @@
             <column name="id" type="CHAR(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-
             <column name="lemma_id" type="CHAR(36)">
                 <constraints nullable="false"/>
             </column>
@@ -24,7 +23,15 @@
             <column name="form_latin" type="VARCHAR(255)"/>
 
             <!-- plural, oblique, informal, alt_spelling, spoken, etc. -->
-            <column name="form_type" type="VARCHAR(50)"/>
+            <column name="form_type" type="VARCHAR(50)" >
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="features_json"
+                    type="json"
+                    remarks="Morphological features for this surface form (e.g., gender, number, person). Applicable to surface_forms only.">
+                <constraints nullable="true"/>
+            </column>
 
             <column name="notes" type="TEXT"/>
 

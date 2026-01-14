@@ -5,7 +5,7 @@ resource "aws_route53_record" "bhashamitra_root" {
   zone_id = data.aws_route53_zone.bhashamitra.zone_id
   name    = "bhashamitra.com"
   type    = "A"
-  
+
   allow_overwrite = true
 
   alias {
@@ -21,7 +21,7 @@ resource "aws_route53_record" "bhashamitra_www" {
   zone_id = data.aws_route53_zone.bhashamitra.zone_id
   name    = "www.bhashamitra.com"
   type    = "A"
-  
+
   allow_overwrite = true
 
   alias {

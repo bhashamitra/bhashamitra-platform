@@ -26,3 +26,9 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
     org.springframework.web.client: DEBUG
+
+# --- AWS S3 Configuration (Local/Dev environment) ---
+aws:
+  s3:
+    bucket:
+      name: ${AWS_S3_BUCKET_NAME:bhashamitra-audio-dev}

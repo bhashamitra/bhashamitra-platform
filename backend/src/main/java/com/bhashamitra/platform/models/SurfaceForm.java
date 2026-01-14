@@ -32,11 +32,19 @@ public class SurfaceForm extends Auditable {
     private String formLatin;
 
     /**
-     * plural, oblique, informal, alt_spelling, spoken, etc.
+     * Form type: infinitive, finite_verb_present, finite_verb_past, etc.
      * Keep as String for flexibility (no enum needed yet).
+     * Required field - NOT NULL at database level.
      */
-    @Column(name = "form_type", length = 50)
+    @Column(name = "form_type", length = 50, nullable = false)
     private String formType;
+
+    /**
+     * Morphological features stored as JSON (e.g., gender, number, person, politeness).
+     * Stored as TEXT in database, serialized/deserialized as JSON string.
+     */
+    @Column(name = "features_json", columnDefinition = "json")
+    private String featuresJson;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;

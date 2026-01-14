@@ -31,9 +31,15 @@ public class LemmaSentenceLink extends Auditable {
     private UsageSentence sentence;
 
     /**
+     * Optional: points to a specific meaning of the lemma used in the sentence.
+     * FK in DB is ON DELETE SET NULL.
+     */
+    @Column(name = "meaning_id", length = 36)
+    private String meaningId;
+
+    /**
      * Optional: points to a specific surface form of the lemma used in the sentence.
      * FK in DB is ON DELETE SET NULL.
-     * NOTE: This entity is defined later (SurfaceForm). We'll create that model next.
      */
     @Column(name = "surface_form_id", length = 36)
     private String surfaceFormId;

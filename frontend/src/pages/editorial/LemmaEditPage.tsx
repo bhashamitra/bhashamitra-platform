@@ -4,6 +4,8 @@ import { useEnabledLanguages } from "../../hooks/useEnabledLanguages";
 import { POS_OPTIONS } from "../../constants/lemma";
 import type { LemmaDto } from "../../types/lemma";
 import MeaningsSection from "./components/MeaningsSection";
+import SurfaceFormsSection from "./components/SurfaceFormsSection";
+import PronunciationsSection from "./components/PronunciationsSection";
 
 export default function LemmaEditPage() {
     const { id } = useParams<{ id: string }>();
@@ -356,8 +358,14 @@ export default function LemmaEditPage() {
                 </div>
             )}
 
+            {/* Pronunciations */}
+            <PronunciationsSection lemmaId={id!} lemmaStatus={lemma.status} />
+
             {/* Meanings */}
-            <MeaningsSection lemmaId={id!} />
+            <MeaningsSection lemmaId={id!} lemmaStatus={lemma.status} />
+
+            {/* Surface Forms */}
+            <SurfaceFormsSection lemmaId={id!} lemmaStatus={lemma.status} />
         </div>
     );
 }

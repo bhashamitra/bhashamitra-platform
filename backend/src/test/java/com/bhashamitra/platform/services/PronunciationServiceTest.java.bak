@@ -242,7 +242,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "LEMMA", "lemma-123", "Native Speaker", "Maharashtra", 
-                "s3://bhashamitra-audio/lemma-123.mp3", 2500, false
+                "s3://bhashamitra-audio/lemma-123.mp3", 2500
         );
         String actor = "admin@example.com";
         
@@ -279,7 +279,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "SURFACE_FORM", "surface-123", "Native Speaker", "Maharashtra", 
-                "s3://bhashamitra-audio/surface-123.mp3", 2500, false
+                "s3://bhashamitra-audio/surface-123.mp3", 2500
         );
         String actor = "admin@example.com";
         
@@ -316,7 +316,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "SENTENCE", "sentence-123", "Native Speaker", "Mumbai", 
-                "s3://bhashamitra-audio/sentence-123.mp3", 3000, false
+                "s3://bhashamitra-audio/sentence-123.mp3", 3000
         );
         String actor = "admin@example.com";
         
@@ -350,7 +350,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "lemma", "lemma-123", "Native Speaker", "Maharashtra", 
-                "s3://bhashamitra-audio/lemma-123.mp3", 2500, false
+                "s3://bhashamitra-audio/lemma-123.mp3", 2500
         );
         String actor = "admin@example.com";
         
@@ -376,7 +376,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "  LEMMA  ", "  lemma-123  ", "  Native Speaker  ", "  Maharashtra  ", 
-                "  s3://bhashamitra-audio/lemma-123.mp3  ", 2500, false
+                "  s3://bhashamitra-audio/lemma-123.mp3  ", 2500
         );
         String actor = "admin@example.com";
         
@@ -409,7 +409,7 @@ class PronunciationServiceTest {
         // Given
         CreateRequest request = new CreateRequest(
                 "LEMMA", "lemma-123", "   ", "   ", 
-                "s3://bhashamitra-audio/lemma-123.mp3", null, false
+                "s3://bhashamitra-audio/lemma-123.mp3", null
         );
         String actor = "admin@example.com";
         
@@ -436,7 +436,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForNullOwnerType() {
         // Given
         CreateRequest request = new CreateRequest(
-                null, "lemma-123", "Speaker", "Region",                 "s3://audio.mp3", 2500, false
+                null, "lemma-123", "Speaker", "Region", "s3://audio.mp3", 2500
         );
         String actor = "admin@example.com";
 
@@ -455,7 +455,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForNullOwnerId() {
         // Given
         CreateRequest request = new CreateRequest(
-                "LEMMA", null, "Speaker", "Region",                 "s3://audio.mp3", 2500, false
+                "LEMMA", null, "Speaker", "Region", "s3://audio.mp3", 2500
         );
         String actor = "admin@example.com";
 
@@ -473,7 +473,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForNullAudioUri() {
         // Given
         CreateRequest request = new CreateRequest(
-                "LEMMA", "lemma-123", "Speaker", "Region", null, 2500, false
+                "LEMMA", "lemma-123", "Speaker", "Region", null, 2500
         );
         String actor = "admin@example.com";
 
@@ -491,7 +491,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForUnsupportedOwnerType() {
         // Given
         CreateRequest request = new CreateRequest(
-                "UNSUPPORTED", "owner-123", "Speaker", "Region",                 "s3://audio.mp3", 2500, false
+                "UNSUPPORTED", "owner-123", "Speaker", "Region", "s3://audio.mp3", 2500
         );
         String actor = "admin@example.com";
 
@@ -511,7 +511,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForNonexistentLemma() {
         // Given
         CreateRequest request = new CreateRequest(
-                "LEMMA", "nonexistent-lemma", "Speaker", "Region",                 "s3://audio.mp3", 2500, false
+                "LEMMA", "nonexistent-lemma", "Speaker", "Region", "s3://audio.mp3", 2500
         );
         String actor = "admin@example.com";
         
@@ -531,7 +531,7 @@ class PronunciationServiceTest {
     void create_ShouldThrowExceptionForDuplicatePronunciation() {
         // Given
         CreateRequest request = new CreateRequest(
-                "LEMMA", "lemma-123", "Speaker", "Region", "s3://existing-audio.mp3", 2500, false
+                "LEMMA", "lemma-123", "Speaker", "Region", "s3://existing-audio.mp3", 2500
         );
         String actor = "admin@example.com";
         
@@ -553,7 +553,7 @@ class PronunciationServiceTest {
     void create_ShouldHandleNullActorGracefully() {
         // Given
         CreateRequest request = new CreateRequest(
-                "LEMMA", "lemma-123", "Speaker", "Region",                 "s3://audio.mp3", 2500, false
+                "LEMMA", "lemma-123", "Speaker", "Region", "s3://audio.mp3", 2500
         );
         
         when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
@@ -583,7 +583,7 @@ class PronunciationServiceTest {
         // Given
         String id = "pronunciation-123";
         UpdateRequest request = new UpdateRequest(
-                "Professional Speaker", "Pune", "s3://new-audio.mp3", 3000, null
+                "Professional Speaker", "Pune", "s3://new-audio.mp3", 3000
         );
         String actor = "editor@example.com";
         
@@ -623,7 +623,7 @@ class PronunciationServiceTest {
         // Given
         String id = "pronunciation-123";
         UpdateRequest request = new UpdateRequest(
-                null, "New Region", null, null, null
+                null, "New Region", null, null
         );
         String actor = "editor@example.com";
         
@@ -650,7 +650,7 @@ class PronunciationServiceTest {
         // Given
         String id = "pronunciation-123";
         UpdateRequest request = new UpdateRequest(
-                null, null, "   ", null, null
+                null, null, "   ", null
         );
         String actor = "editor@example.com";
         
@@ -837,7 +837,7 @@ class PronunciationServiceTest {
         
         // 1. Create pronunciation
         CreateRequest createRequest = new CreateRequest(
-                "LEMMA", "lemma-123", "Native Speaker", "Maharashtra",                 "s3://audio.mp3", 2500, false
+                "LEMMA", "lemma-123", "Native Speaker", "Maharashtra", "s3://audio.mp3", 2500
         );
         
         when(lemmaService.getById("lemma-123")).thenReturn(sampleLemma);
@@ -892,8 +892,8 @@ class PronunciationServiceTest {
             when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
 
             CreateRequest request = new CreateRequest(
-                    ownerTypes[i], "owner-" + i, "Speaker", "Region", "s3://audio-" + i + ".mp3", 2500, false
-        );
+                    ownerTypes[i], "owner-" + i, "Speaker", "Region", "s3://audio-" + i + ".mp3", 2500
+            );
 
             // When
             pronunciationService.create(request, actor);
@@ -964,7 +964,7 @@ class PronunciationServiceTest {
             when(pronunciationRepository.save(any(Pronunciation.class))).thenReturn(samplePronunciation);
 
             CreateRequest request = new CreateRequest(
-                    "LEMMA", "lemma-123", "Speaker", "Region", audioUri, 2500, false
+                    "LEMMA", "lemma-123", "Speaker", "Region", audioUri, 2500
             );
 
             // When

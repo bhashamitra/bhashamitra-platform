@@ -1,5 +1,6 @@
 package com.bhashamitra.platform.services;
 
+import com.bhashamitra.platform.controllers.dto.UsageSentenceSearchRequest;
 import com.bhashamitra.platform.models.UsageSentence;
 import com.bhashamitra.platform.models.UsageSentenceStatus;
 import com.bhashamitra.platform.repositories.UsageSentenceRepository;
@@ -13,6 +14,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Arrays;
 import java.util.List;
@@ -1084,5 +1089,173 @@ class UsageSentenceServiceTest {
             assertEquals(expectedRegisters[i], capturedSentence.getRegister(), 
                     "Register mismatch for input: " + registers[i]);
         }
+    }
+
+    // =========================================================
+    // searchSentences Tests
+    // =========================================================
+
+    @Test
+    @DisplayName("searchSentences - Should return paginated results with all filters")
+    void searchSentences_ShouldReturnPaginatedResultsWithAllFilters() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                "मी शाळेत", "mr", "DRAFT", 0, 20, "sentenceNative", "asc"
+        );
+        
+        UsageSentence sentence1 = new UsageSentence();
+        sentence1.setLanguage("mr");
+        sentence1.setSentenceNative("मी शाळेत जातो.");
+        sentence1.setSentenceLatin("Mi shalet jato.");
+        sentence1.setTranslation("I go to school.");
+        sentence1.setStatus(UsageSentenceStatus.DRAFT);
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(mockPage.getContent()).thenReturn(Arrays.asList(sentence1));
+        
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        Page<UsageSentence> result = usageSentenceService.searchSentences(request);
+
+        // Then
+        assertEquals(mockPage, result);
+        assertEquals(1, result.getContent().size());
+        assertEquals("मी शाळेत जातो.", result.getContent().get(0).getSentenceNative());
+        
+        verify(usageSentenceRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should handle pagination parameters")
+    void searchSentences_ShouldHandlePaginationParameters() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                null, "mr", null, 2, 50, "sentenceNative", "asc"
+        );
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        usageSentenceService.searchSentences(request);
+
+        // Then
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(usageSentenceRepository).findAll(any(Specification.class), pageableCaptor.capture());
+        
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(2, pageable.getPageNumber());
+        assertEquals(50, pageable.getPageSize());
+        assertEquals(Sort.by(Sort.Direction.ASC, "sentenceNative"), pageable.getSort());
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should handle descending sort")
+    void searchSentences_ShouldHandleDescendingSort() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                null, "mr", null, 0, 20, "status", "desc"
+        );
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        usageSentenceService.searchSentences(request);
+
+        // Then
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(usageSentenceRepository).findAll(any(Specification.class), pageableCaptor.capture());
+        
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(Sort.by(Sort.Direction.DESC, "status"), pageable.getSort());
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should search in native, latin, and translation")
+    void searchSentences_ShouldSearchInNativeLatinAndTranslation() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                "school", "mr", null, 0, 20, "sentenceNative", "asc"
+        );
+        
+        UsageSentence sentence1 = new UsageSentence();
+        sentence1.setSentenceNative("मी शाळेत जातो.");
+        sentence1.setSentenceLatin("Mi shalet jato.");
+        sentence1.setTranslation("I go to school.");
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(mockPage.getContent()).thenReturn(Arrays.asList(sentence1));
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        Page<UsageSentence> result = usageSentenceService.searchSentences(request);
+
+        // Then
+        assertEquals(1, result.getContent().size());
+        verify(usageSentenceRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should filter by language")
+    void searchSentences_ShouldFilterByLanguage() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                null, "mr", null, 0, 20, "sentenceNative", "asc"
+        );
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        usageSentenceService.searchSentences(request);
+
+        // Then
+        verify(usageSentenceRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should filter by status")
+    void searchSentences_ShouldFilterByStatus() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                null, "mr", "PUBLISHED", 0, 20, "sentenceNative", "asc"
+        );
+        
+        UsageSentence publishedSentence = new UsageSentence();
+        publishedSentence.setLanguage("mr");
+        publishedSentence.setSentenceNative("मी शाळेत जातो.");
+        publishedSentence.setStatus(UsageSentenceStatus.PUBLISHED);
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(mockPage.getContent()).thenReturn(Arrays.asList(publishedSentence));
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        Page<UsageSentence> result = usageSentenceService.searchSentences(request);
+
+        // Then
+        assertEquals(1, result.getContent().size());
+        assertEquals(UsageSentenceStatus.PUBLISHED, result.getContent().get(0).getStatus());
+        verify(usageSentenceRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("searchSentences - Should combine search, language, and status filters")
+    void searchSentences_ShouldCombineSearchLanguageAndStatusFilters() {
+        // Given
+        UsageSentenceSearchRequest request = new UsageSentenceSearchRequest(
+                "जातो", "mr", "DRAFT", 0, 20, "sentenceNative", "asc"
+        );
+        
+        Page<UsageSentence> mockPage = mock(Page.class);
+        when(usageSentenceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
+
+        // When
+        usageSentenceService.searchSentences(request);
+
+        // Then
+        verify(usageSentenceRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 }

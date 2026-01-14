@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Pencil } from "lucide-react";
 import type { LemmaDto, PagedLemmasResponse } from "../../types/lemma";
 import { useEnabledLanguages } from "../../hooks/useEnabledLanguages";
 import { POS_OPTIONS, STATUS_OPTIONS } from "../../constants/lemma";
@@ -184,6 +185,7 @@ export default function LemmasPage() {
                 <table className="admin-table">
                     <thead>
                         <tr>
+                            <th className="w-32">Actions</th>
                             <th>
                                 <button type="button" onClick={() => handleSort("lemmaNative")} className="admin-th-sort">
                                     Native{sortIndicator("lemmaNative")}
@@ -218,14 +220,14 @@ export default function LemmasPage() {
                         ))}
                         {!loading && (!data || data.content.length === 0) && (
                             <tr>
-                                <td colSpan={6} className="px-4 py-6 text-slate-600">
+                                <td colSpan={7} className="px-4 py-6 text-slate-600">
                                     No lemmas found.
                                 </td>
                             </tr>
                         )}
                         {loading && (
                             <tr>
-                                <td colSpan={6} className="px-4 py-6 text-slate-600">
+                                <td colSpan={7} className="px-4 py-6 text-slate-600">
                                     Loading…
                                 </td>
                             </tr>
@@ -268,6 +270,7 @@ export default function LemmasPage() {
 }
 
 function LemmaRow({ lemma }: { lemma: LemmaDto }) {
+    const navigate = useNavigate();
     const statusClass = {
         DRAFT: "pill-warn",
         REVIEW: "pill-info",
@@ -280,13 +283,17 @@ function LemmaRow({ lemma }: { lemma: LemmaDto }) {
     return (
         <tr>
             <td>
-                <Link
-                    to={`/admin/lemmas/${lemma.id}/edit`}
-                    className="font-medium text-[var(--warriors-blue)] hover:underline"
+                <button
+                    type="button"
+                    className="action-btn action-btn-edit"
+                    onClick={() => navigate(`/admin/lemmas/${lemma.id}/edit`)}
+                    title="Edit lemma"
+                    aria-label="Edit lemma"
                 >
-                    {lemma.lemmaNative}
-                </Link>
+                    <Pencil size={14} />
+                </button>
             </td>
+            <td>{lemma.lemmaNative}</td>
             <td className="text-slate-700">{lemma.lemmaLatin || "-"}</td>
             <td className="text-slate-700">{lemma.language}</td>
             <td className="text-slate-700">{lemma.pos || "-"}</td>

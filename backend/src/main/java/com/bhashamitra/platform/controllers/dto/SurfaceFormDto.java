@@ -6,5 +6,6 @@ public record SurfaceFormDto(
         String formNative,
         String formLatin,
         String formType,
+        String featuresJson,
         String notes
 ) {}

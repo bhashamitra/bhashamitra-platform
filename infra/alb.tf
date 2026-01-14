@@ -51,7 +51,7 @@ resource "aws_lb" "bhashamitra" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.bhashamitra_alb.id]
-  subnets            = [
+  subnets = [
     data.aws_subnet.mvl_public_subnet.id,
     aws_subnet.bhashamitra_public_1c.id
   ]

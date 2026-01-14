@@ -9,6 +9,8 @@ import LemmasPage from "./pages/editorial/LemmasPage.tsx";
 import LemmaCreatePage from "./pages/editorial/LemmaCreatePage.tsx";
 import LemmaEditPage from "./pages/editorial/LemmaEditPage";
 import SentencesPage from "./pages/editorial/SentencesPage.tsx";
+import SentenceCreatePage from "./pages/editorial/SentenceCreatePage.tsx";
+import SentenceEditPage from "./pages/editorial/SentenceEditPage.tsx";
 import PronunciationsPage from "./pages/editorial/PronunciationsPage.tsx";
 import LanguagesPage from "./pages/admin/LanguagesPage.tsx";
 
@@ -33,6 +35,8 @@ export default function App() {
                     <Route path="lemmas/new" element={<LemmaCreatePage />} />
                     <Route path="lemmas/:id/edit" element={<LemmaEditPage />} />
                     <Route path="sentences" element={<SentencesPage />} />
+                    <Route path="sentences/new" element={<SentenceCreatePage />} />
+                    <Route path="sentences/:id/edit" element={<SentenceEditPage />} />
                     <Route path="pronunciations" element={<PronunciationsPage />} />
                     <Route path="languages" element={<LanguagesPage />} />
                 </Route>

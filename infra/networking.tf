@@ -21,7 +21,7 @@ data "aws_route_table" "mvl_public" {
     name   = "vpc-id"
     values = [data.aws_vpc.mvl_vpc.id]
   }
-  
+
   filter {
     name   = "route.destination-cidr-block"
     values = ["0.0.0.0/0"]

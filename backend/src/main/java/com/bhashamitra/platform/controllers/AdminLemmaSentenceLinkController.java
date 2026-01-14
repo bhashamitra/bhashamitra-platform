@@ -30,7 +30,7 @@ public class AdminLemmaSentenceLinkController {
     // --------------------
 
     @GetMapping("/{id}")
-    public ResponseEntity<LemmaSentenceLinkDto> getById(@PathVariable String id) {
+    public ResponseEntity<LemmaSentenceLinkDto> getById(@PathVariable("id") String id) {
         try {
             return ResponseEntity.ok(toDto(service.getById(id)));
         } catch (IllegalArgumentException e) {
@@ -44,8 +44,8 @@ public class AdminLemmaSentenceLinkController {
      */
     @GetMapping
     public ResponseEntity<List<LemmaSentenceLinkDto>> list(
-            @RequestParam(required = false) String lemmaId,
-            @RequestParam(required = false) String sentenceId
+            @RequestParam(value = "lemmaId", required = false) String lemmaId,
+            @RequestParam(value = "sentenceId", required = false) String sentenceId
     ) {
         boolean hasLemma = lemmaId != null && !lemmaId.isBlank();
         boolean hasSentence = sentenceId != null && !sentenceId.isBlank();
@@ -73,6 +73,7 @@ public class AdminLemmaSentenceLinkController {
         LemmaSentenceLinkService.CreateRequest svcReq = new LemmaSentenceLinkService.CreateRequest(
                 req.lemmaId(),
                 req.sentenceId(),
+                req.meaningId(),
                 req.surfaceFormId(),
                 req.linkType()
         );
@@ -90,12 +91,13 @@ public class AdminLemmaSentenceLinkController {
     // --------------------
 
     @PutMapping("/{id}")
-    public ResponseEntity<LemmaSentenceLinkDto> update(@PathVariable String id,
+    public ResponseEntity<LemmaSentenceLinkDto> update(@PathVariable("id") String id,
                                                        @Valid @RequestBody UpdateLemmaSentenceLinkRequest req,
                                                        Authentication auth) {
         String act = actor(auth);
 
         LemmaSentenceLinkService.UpdateRequest svcReq = new LemmaSentenceLinkService.UpdateRequest(
+                req.meaningId(),
                 req.surfaceFormId(),
                 req.linkType()
         );
@@ -113,7 +115,7 @@ public class AdminLemmaSentenceLinkController {
     // --------------------
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id, Authentication auth) {
         try {
             service.delete(id, actor(auth));
             return ResponseEntity.noContent().build();
@@ -131,6 +133,7 @@ public class AdminLemmaSentenceLinkController {
                 l.getId(),
                 l.getLemma() != null ? l.getLemma().getId() : null,
                 l.getSentence() != null ? l.getSentence().getId() : null,
+                l.getMeaningId(),
                 l.getSurfaceFormId(),
                 l.getLinkType() != null ? l.getLinkType().name() : null
         );

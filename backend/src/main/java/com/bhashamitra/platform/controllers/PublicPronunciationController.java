@@ -49,7 +49,8 @@ public class PublicPronunciationController {
                 p.getSpeaker(),
                 p.getRegion(),
                 p.getAudioUri(),
-                p.getDurationMs()
+                p.getDurationMs(),
+                p.getIsPrimary()
         );
     }
 }

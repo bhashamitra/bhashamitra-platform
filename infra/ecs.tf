@@ -145,17 +145,17 @@ resource "aws_ecs_task_definition" "bhashamitra" {
   family                   = "bhashamitra"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"  # 0.25 vCPU
-  memory                   = "512"  # 512 MB
+  cpu                      = "256" # 0.25 vCPU
+  memory                   = "512" # 512 MB
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn           = aws_iam_role.ecs_task_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
 
   # Use nginx as placeholder - GitHub Actions will update with real image
   container_definitions = jsonencode([
     {
       name  = "bhashamitra-app"
-      image = "nginx:latest"  # Placeholder - will be updated by GitHub Actions
-      
+      image = "nginx:latest" # Placeholder - will be updated by GitHub Actions
+
       portMappings = [
         {
           containerPort = 8080
@@ -238,6 +238,12 @@ resource "aws_ecs_task_definition" "bhashamitra" {
     Project     = "Bhashamitra"
     Environment = "production"
   }
+
+  # Ignore changes to container_definitions since GitHub Actions manages
+  # task definition revisions (image updates) via deployments
+  lifecycle {
+    ignore_changes = [container_definitions]
+  }
 }
 
 # ECS Service
@@ -249,9 +255,9 @@ resource "aws_ecs_service" "bhashamitra" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [data.aws_subnet.mvl_public_subnet.id]  # Using public subnet for now
+    subnets          = [data.aws_subnet.mvl_public_subnet.id] # Using public subnet for now
     security_groups  = [aws_security_group.bhashamitra_ecs.id]
-    assign_public_ip = true  # Required for Fargate in public subnet
+    assign_public_ip = true # Required for Fargate in public subnet
   }
 
   # Load balancer configuration
@@ -272,6 +278,12 @@ resource "aws_ecs_service" "bhashamitra" {
     Name        = "bhashamitra-service"
     Project     = "Bhashamitra"
     Environment = "production"
+  }
+
+  # Ignore changes to task_definition since GitHub Actions manages
+  # deployments (task definition revisions) via ECS service updates
+  lifecycle {
+    ignore_changes = [task_definition]
   }
 
   # Note: load_balancer block will be added in Step 6 when we create the ALB

@@ -13,4 +13,7 @@ public interface PronunciationRepository extends JpaRepository<Pronunciation, St
 
     // Count pronunciations for a specific owner (lemma, sentence, etc.)
     long countByOwnerTypeAndOwnerId(String ownerType, String ownerId);
+
+    // Find pronunciations that are marked as primary for a given owner
+    List<Pronunciation> findByOwnerTypeAndOwnerIdAndIsPrimaryTrue(String ownerType, String ownerId);
 }
