@@ -1,0 +1,37 @@
+{
+  "pageId": "create-sentence",
+  "title": "Create New Sentence",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "Select the language for this sentence. The language determines script rules and validation.",
+          "guidance": "Choose the primary language this sentence belongs to. Once set, this cannot be changed later."
+        },
+        {
+          "name": "Native Sentence Text",
+          "description": "Enter the complete sentence in its native script. This must be a grammatically correct, complete sentence.",
+          "guidance": "Write complete sentences that demonstrate natural usage. Use proper punctuation. Examples: 'मी तुम्हाला नमस्कार करतो.' (I greet you.), 'तो शाळेत जातो.' (He goes to school.)."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After creating the sentence",
+          "actions": [
+            "Link the sentence to one or more Lemmas (required for the sentence to be useful)",
+            "Optionally refine links to specific Meanings or Surface Forms",
+            "Add Pronunciations (audio) to help learners hear the sentence spoken",
+            "Verify the sentence appears correctly and demonstrates proper usage"
+          ]
+        }
+      ]
+    }
+  ]
+}

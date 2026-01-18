@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Trash2, Mic, MicOff } from "lucide-react";
 import { apiFetch } from "../../../utils/apiClient";
+import HelpButton from "../../../components/HelpButton";
 
 interface PronunciationDto {
     id: string;
@@ -285,7 +286,10 @@ export default function SentencePronunciationsSection({ sentenceId, sentenceStat
 
     return (
         <div className="mt-8 border-t border-slate-200 pt-4">
-            <h2 className="section-header">Pronunciations</h2>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="section-header">Pronunciations</h2>
+                <HelpButton pageId="create-pronunciation-sentence" />
+            </div>
 
             {error && (
                 <div className="error-message mb-4">

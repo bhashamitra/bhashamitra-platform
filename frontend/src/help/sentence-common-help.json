@@ -1,0 +1,105 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Usage Sentence?",
+      "content": "A usage sentence is an example sentence that demonstrates how a word or phrase is used in context. Sentences help learners understand proper usage, grammatical patterns, and natural language flow. Sentences can be linked to one or more lemmas (with optional refinement to specific meanings or surface forms)."
+    },
+    {
+      "type": "field-guidance",
+      "title": "Field Guidance",
+      "fields": [
+        {
+          "name": "Latin Transliteration",
+          "required": false,
+          "description": "Optional transliteration of the sentence using Latin characters. Helps with pronunciation and searchability.",
+          "guidance": "Use standard transliteration schemes (e.g., ISO 15919 or simplified IAST). Keep transliteration consistent with the sentence's natural flow.",
+          "examples": [
+            {
+              "native": "मी तुम्हाला नमस्कार करतो.",
+              "latin": "Mi tumhala namaskar karto.",
+              "note": "I greet you."
+            }
+          ]
+        },
+        {
+          "name": "Translation",
+          "required": false,
+          "description": "Optional English (or other language) translation of the sentence. Helps learners understand the meaning.",
+          "guidance": "Provide a clear, natural translation. The translation should capture the meaning, not be a word-for-word literal translation.",
+          "examples": [
+            {
+              "native": "मी तुम्हाला नमस्कार करतो.",
+              "translation": "I greet you.",
+              "note": "Natural translation"
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "required": false,
+          "description": "The formality level or register of the sentence (formal, neutral, informal, colloquial).",
+          "guidance": "Register helps categorize the sentence's context and formality level. Use 'neutral' for standard usage, 'formal' for respectful/polite contexts, 'informal' for casual speech, and 'colloquial' for regional/dialectal variations."
+        },
+        {
+          "name": "Explanation",
+          "required": false,
+          "description": "Optional explanation or context about the sentence. These are for creators and curators only—they are not shown to learners.",
+          "guidance": "Use explanations to record editorial notes, cultural context, or usage clarifications. Examples: \"Used in literary context\", \"Regional variation\", \"Shows polite form\"."
+        },
+        {
+          "name": "Difficulty",
+          "required": false,
+          "description": "Optional difficulty level (1-5) indicating how advanced this sentence is. 1 = beginner, 5 = advanced.",
+          "guidance": "Set difficulty based on grammatical complexity, vocabulary level, and length. Simple sentences with common words = 1-2, complex sentences with advanced grammar = 4-5."
+        }
+      ]
+    },
+    {
+      "type": "examples",
+      "title": "Examples",
+      "items": [
+        {
+          "native": "मी तुम्हाला नमस्कार करतो.",
+          "latin": "Mi tumhala namaskar karto.",
+          "translation": "I greet you.",
+          "register": "neutral",
+          "note": "Simple sentence with common verb"
+        },
+        {
+          "native": "तो शाळेत जातो.",
+          "latin": "To shalet jato.",
+          "translation": "He goes to school.",
+          "register": "neutral",
+          "note": "Everyday usage example"
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Writing incomplete sentences or fragments",
+          "example": "Entering just 'नमस्कार' instead of 'मी तुम्हाला नमस्कार करतो.'",
+          "solution": "Use complete, grammatically correct sentences that demonstrate natural usage."
+        },
+        {
+          "mistake": "Using overly complex or literary sentences",
+          "example": "Writing sentences from classical literature that learners won't encounter in daily use",
+          "solution": "Prioritize sentences that learners will actually encounter and use in real communication."
+        },
+        {
+          "mistake": "Not linking sentences to lemmas",
+          "example": "Creating sentences without linking them to relevant lemmas",
+          "solution": "Link sentences to lemmas to help learners see words in context. Use the Links section after creating the sentence."
+        },
+        {
+          "mistake": "Word-for-word translations instead of natural translations",
+          "example": "Translating 'मी तुम्हाला नमस्कार करतो' as 'I you greeting do'",
+          "solution": "Provide natural translations that capture the meaning, not literal word order."
+        }
+      ]
+    }
+  ]
+}

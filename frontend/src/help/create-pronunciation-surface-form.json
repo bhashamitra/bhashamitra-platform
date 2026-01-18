@@ -1,0 +1,31 @@
+{
+  "pageId": "create-pronunciation-surface-form",
+  "title": "Add Pronunciation for Surface Form",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Audio",
+          "description": "Audio recording of the surface form pronunciation. Record directly or upload a file (max 1 MB).",
+          "guidance": "Keep recordings short: ≤3 seconds recommended, ≤5 seconds maximum. Pronounce the inflected form clearly (e.g., 'धावली' not the base form 'धावणे')."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After adding the pronunciation",
+          "actions": [
+            "Test playback to ensure the audio matches the inflected form",
+            "Verify the pronunciation sounds natural for that specific form",
+            "Add speaker and region metadata if needed"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "pageId": "create-link",
+  "title": "Add Link",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Lemma",
+          "description": "Select the lemma (dictionary entry) this sentence demonstrates or relates to. The lemma language should match the sentence language.",
+          "guidance": "Choose the main word or concept that this sentence illustrates. Use the dropdown to search and select the appropriate lemma. Once you select a lemma, optional fields for Meaning and Surface Form will populate if available."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After creating the link",
+          "actions": [
+            "Verify the sentence appears correctly linked to the lemma",
+            "Optionally refine the link by selecting a specific Meaning or Surface Form if needed",
+            "Review the link type to ensure it accurately categorizes the relationship",
+            "Check that linked sentences help demonstrate the lemma's usage in context"
+          ]
+        }
+      ]
+    }
+  ]
+}

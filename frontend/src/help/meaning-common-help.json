@@ -1,0 +1,48 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Meaning?",
+      "content": "A meaning provides a definition or explanation of what a lemma represents. A lemma can have multiple meanings, each in a different language (typically English or Hindi). Meanings are displayed to learners and help them understand the word."
+    },
+    {
+      "type": "examples",
+      "title": "Examples",
+      "items": [
+        {
+          "native": "धावणे",
+          "meaning": "To run; to move quickly on foot",
+          "language": "English",
+          "note": "Primary meaning (priority 1)"
+        },
+        {
+          "native": "धावणे",
+          "meaning": "दौड़ना; पैरों पर तेज़ी से चलना",
+          "language": "Hindi",
+          "note": "Secondary meaning (priority 2)"
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Writing overly complex definitions",
+          "example": "Using technical jargon that learners won't understand",
+          "solution": "Write simple, clear definitions appropriate for the target audience's language level."
+        },
+        {
+          "mistake": "Including the lemma word in its own meaning",
+          "example": "For 'धावणे' (to run), writing 'धावणे means to run fast'",
+          "solution": "Define the concept, not the word itself. Write 'To run; to move quickly on foot' instead."
+        },
+        {
+          "mistake": "Setting same priority for all meanings",
+          "example": "Giving priority 1 to both primary and secondary meanings",
+          "solution": "Use priority to order meanings by importance. Primary meaning should be 1, secondary 2, etc."
+        }
+      ]
+    }
+  ]
+}

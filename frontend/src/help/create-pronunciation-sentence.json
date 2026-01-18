@@ -1,0 +1,31 @@
+{
+  "pageId": "create-pronunciation-sentence",
+  "title": "Add Pronunciation for Sentence",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Audio",
+          "description": "Audio recording of the sentence pronunciation. Record directly or upload a file (max 1 MB).",
+          "guidance": "Record the complete sentence with natural pacing. Sentences can be slightly longer than word pronunciations, but keep them concise. Pronounce all words clearly and maintain natural sentence rhythm."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After adding the pronunciation",
+          "actions": [
+            "Test playback to ensure the entire sentence is clear and audible",
+            "Verify the pronunciation demonstrates natural sentence flow",
+            "Add speaker and region metadata if recording different dialects or accents"
+          ]
+        }
+      ]
+    }
+  ]
+}

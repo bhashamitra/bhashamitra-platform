@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Trash2, Pencil, Volume2, Plus, X, Mic, Square } from "lucide-react";
+import HelpButton from "../../../components/HelpButton";
 
 export interface SurfaceFormDto {
     id: string;
@@ -962,7 +963,10 @@ export default function SurfaceFormsSection({ lemmaId, lemmaStatus }: SurfaceFor
 
                             {/* Always-visible Add Pronunciation Form */}
                             <div className="border-t border-slate-200 pt-4">
-                                <h4 className="text-sm font-medium text-slate-700 mb-3">Add Pronunciation</h4>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-medium text-slate-700">Add Pronunciation</h4>
+                                    <HelpButton pageId="create-pronunciation-surface-form" />
+                                </div>
                                 <form 
                                     ref={pronunciationFormRef}
                                     onSubmit={(e) => handleUploadPronunciation(e, sf.id)} 
@@ -1104,14 +1108,17 @@ export default function SurfaceFormsSection({ lemmaId, lemmaStatus }: SurfaceFor
                                 <h3 className="text-lg font-semibold text-slate-900">
                                     {editingSurfaceForm ? "Edit Surface Form" : "Add Surface Form"}
                                 </h3>
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="text-slate-400 hover:text-slate-600"
-                                    disabled={saving}
-                                >
-                                    ✕
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <HelpButton pageId={editingSurfaceForm ? "edit-surface-form" : "create-surface-form"} />
+                                    <button
+                                        type="button"
+                                        onClick={closeModal}
+                                        className="text-slate-400 hover:text-slate-600"
+                                        disabled={saving}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             </div>
 
                             {error && (

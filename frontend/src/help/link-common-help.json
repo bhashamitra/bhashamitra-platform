@@ -1,0 +1,73 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Sentence Link?",
+      "content": "A sentence link connects a usage sentence to a lemma, allowing learners to see example sentences in context. Links can optionally be refined to specific meanings or surface forms within the lemma, providing more precise context. This helps learners understand how words are used in real sentences."
+    },
+    {
+      "type": "field-guidance",
+      "title": "Field Guidance",
+      "fields": [
+        {
+          "name": "Meaning",
+          "required": false,
+          "description": "Optional: Refine the link to a specific meaning within the selected lemma. If a lemma has multiple meanings, select the one this sentence demonstrates.",
+          "guidance": "Use when the sentence illustrates a specific meaning rather than the lemma as a whole. For example, if a word has both 'noun' and 'verb' meanings, link to the specific meaning the sentence uses."
+        },
+        {
+          "name": "Surface Form",
+          "required": false,
+          "description": "Optional: Refine the link to a specific surface form (inflected form) within the selected lemma. This links the sentence to a particular grammatical form.",
+          "guidance": "Use when the sentence uses a specific inflected form (e.g., past tense, plural). For example, if the sentence uses 'ran' but the lemma is 'run', you could link to the 'ran' surface form."
+        },
+        {
+          "name": "Link Type",
+          "required": false,
+          "description": "Optional: Categorize how the sentence relates to the lemma. Defaults to 'Exact' if not specified.",
+          "guidance": "Use 'Exact' when the sentence contains the lemma word exactly as written. Use 'Inflected' when the sentence uses a grammatical variant (e.g., plural, tense). Use 'Implied' when the sentence uses the word in a way that implies its meaning but doesn't use the exact word form."
+        }
+      ]
+    },
+    {
+      "type": "examples",
+      "title": "Examples",
+      "items": [
+        {
+          "lemma": "नमस्कार (namaskar)",
+          "sentence": "मी तुम्हाला नमस्कार करतो.",
+          "linkType": "EXACT",
+          "note": "Sentence uses the lemma word exactly"
+        },
+        {
+          "lemma": "जाणे (jane)",
+          "sentence": "तो शाळेत जातो.",
+          "surfaceForm": "जातो (jato)",
+          "linkType": "INFLECTED",
+          "note": "Sentence uses an inflected form of the lemma"
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Not linking sentences to lemmas",
+          "example": "Creating sentences without connecting them to any lemmas",
+          "solution": "Always link sentences to relevant lemmas so learners can see words in context. Sentences without links are not useful for learning."
+        },
+        {
+          "mistake": "Linking to the wrong lemma",
+          "example": "Linking a Marathi sentence to an English lemma",
+          "solution": "Ensure the lemma language matches the sentence language. Verify the lemma represents the main word or concept in the sentence."
+        },
+        {
+          "mistake": "Using overly specific links when not needed",
+          "example": "Always selecting meaning and surface form even when the sentence demonstrates the lemma generally",
+          "solution": "Start with just the lemma link. Only add meaning or surface form refinements when the sentence specifically demonstrates those aspects."
+        }
+      ]
+    }
+  ]
+}

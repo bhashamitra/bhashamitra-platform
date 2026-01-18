@@ -1,0 +1,70 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Pronunciation?",
+      "content": "A pronunciation is an audio recording that demonstrates how a word or phrase is pronounced. Pronunciations help learners hear the correct way to say words and improve their spoken language skills. Each entity (lemma, surface form, or sentence) can have multiple pronunciations from different speakers or regions."
+    },
+    {
+      "type": "field-guidance",
+      "title": "Field Guidance",
+      "fields": [
+        {
+          "name": "Audio",
+          "required": true,
+          "description": "Audio recording of the pronunciation. You can record directly in the browser or upload an audio file.",
+          "guidance": "Use the 'Record Audio' button to record directly, or select an audio file from your computer. Recordings should be clear, with minimal background noise. Maximum file size: 1 MB. Recommended format: WebM or MP3.",
+          "examples": [
+            {
+              "note": "For lemmas: Keep recordings short (≤3 seconds recommended, ≤5 seconds max)"
+            },
+            {
+              "note": "For surface forms: Similar to lemmas, ≤3 seconds recommended"
+            },
+            {
+              "note": "For sentences: Can be longer to capture the full sentence, but keep it concise"
+            }
+          ]
+        },
+        {
+          "name": "Speaker",
+          "required": false,
+          "description": "Optional identifier for the person who recorded the pronunciation (e.g., 'Native Speaker 1', 'Male Voice').",
+          "guidance": "Use speaker tags to distinguish between different voices when you have multiple pronunciations. This helps with consistency and allows learners to choose a preferred voice."
+        },
+        {
+          "name": "Region",
+          "required": false,
+          "description": "Optional identifier for the regional dialect or accent (e.g., 'Pune', 'Mumbai', 'Standard Marathi').",
+          "guidance": "Use region tags to indicate dialectal variations. This is particularly useful for languages with regional pronunciation differences."
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Recording too long",
+          "example": "Recording for 10+ seconds when the word only needs 2 seconds",
+          "solution": "Keep recordings concise. Aim for ≤3 seconds for words, slightly longer for sentences. Long recordings take up space and may lose learner attention."
+        },
+        {
+          "mistake": "Background noise in recording",
+          "example": "Recording in a noisy environment or with echo",
+          "solution": "Record in a quiet space with minimal background noise. Test your microphone quality before recording."
+        },
+        {
+          "mistake": "Uploading files larger than 1 MB",
+          "example": "Trying to upload high-quality recordings that exceed the limit",
+          "solution": "Compress audio files before uploading, or record directly in the browser which handles compression automatically."
+        },
+        {
+          "mistake": "Not setting primary pronunciation for lemmas",
+          "example": "Having multiple pronunciations but no primary one selected",
+          "solution": "For lemmas, designate one pronunciation as primary. This will be the default pronunciation shown to learners."
+        }
+      ]
+    }
+  ]
+}

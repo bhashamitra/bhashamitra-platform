@@ -1,0 +1,40 @@
+{
+  "pageId": "edit-sentence",
+  "title": "Edit Sentence",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "The language for this sentence. This field cannot be changed after creation.",
+          "guidance": "Language is set when the sentence is first created and determines script rules and validation."
+        },
+        {
+          "name": "Native Sentence Text",
+          "description": "The complete sentence in its native script. This must be a grammatically correct, complete sentence.",
+          "guidance": "Ensure the sentence is complete and grammatically correct. Examples: 'मी तुम्हाला नमस्कार करतो.' (I greet you.), 'तो शाळेत जातो.' (He goes to school.)."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After saving changes",
+          "actions": [
+            "Verify sentence links to lemmas are still appropriate after text changes",
+            "Update pronunciations if the sentence pronunciation has changed",
+            "Review and update any linked meanings or surface forms as needed"
+          ]
+        },
+        {
+          "step": "Status workflow",
+          "content": "Use the status buttons above the form to promote the sentence through the workflow: DRAFT → REVIEW → PUBLISHED. Once published, changes should be carefully reviewed as they affect the public dictionary."
+        }
+      ]
+    }
+  ]
+}

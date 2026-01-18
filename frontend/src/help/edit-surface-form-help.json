@@ -1,0 +1,36 @@
+{
+  "pageId": "edit-surface-form",
+  "title": "Edit Surface Form",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Native Form",
+          "description": "The surface form in its native script. This is the inflected/conjugated form as it appears in actual usage.",
+          "guidance": "This should be the actual form as used in text, not the lemma base form. Examples: 'धावली' (she ran), 'धावतो' (he runs), 'जेवतो' (he eats). Maximum 255 characters."
+        },
+        {
+          "name": "Form Type",
+          "description": "The grammatical category of this surface form. The form type determines whether features are available.",
+          "guidance": "Form type cannot be changed after creation. If you need a different type, create a new surface form instead. If your form type supports features, the Features section will appear below."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After saving changes",
+          "actions": [
+            "Verify features are still appropriate if form type supports them",
+            "Update pronunciation if the form pronunciation has changed",
+            "Ensure the surface form still correctly links to the parent lemma"
+          ]
+        }
+      ]
+    }
+  ]
+}

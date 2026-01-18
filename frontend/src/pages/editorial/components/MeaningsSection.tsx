@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Trash2, Pencil } from "lucide-react";
+import HelpButton from "../../../components/HelpButton";
 
 export interface MeaningDto {
     id: string;
@@ -282,14 +283,17 @@ export default function MeaningsSection({ lemmaId, lemmaStatus }: MeaningsSectio
                                 <h3 className="modal-title">
                                     {editingMeaning ? "Edit Meaning" : "Add Meaning"}
                                 </h3>
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="modal-close-btn"
-                                    disabled={saving}
-                                >
-                                    ✕
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <HelpButton pageId={editingMeaning ? "edit-meaning" : "create-meaning"} />
+                                    <button
+                                        type="button"
+                                        onClick={closeModal}
+                                        className="modal-close-btn"
+                                        disabled={saving}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             </div>
 
                             {error && (

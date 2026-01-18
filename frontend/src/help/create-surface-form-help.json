@@ -1,0 +1,63 @@
+{
+  "pageId": "create-surface-form",
+  "title": "Add Surface Form",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Native Form",
+          "description": "Enter the surface form in its native script (e.g., Devanagari for Marathi). This is the inflected/conjugated form as it appears in actual usage.",
+          "guidance": "Enter the actual form as used in text, not the lemma base form. Examples: 'धावली' (she ran), 'धावतो' (he runs), 'जेवतो' (he eats), 'जेवतोय' (he is eating). Maximum 255 characters."
+        },
+        {
+          "name": "Form Type",
+          "description": "Select the grammatical category of this surface form. The form type determines whether features (gender, number, person, politeness) are available.",
+          "guidance": "Choose the appropriate type: verb (for conjugated verbs), noun (for inflected nouns), adjective (for adjectival forms), pronoun, etc. This must match the grammatical category of the surface form. After selecting a form type, if it supports features (verb, adjective, pronoun), a Features section will appear below for you to optionally categorize the form."
+        }
+      ]
+    },
+    {
+      "type": "field-guidance",
+      "title": "Optional Fields",
+      "fields": [
+        {
+          "name": "Features",
+          "required": false,
+          "description": "Grammatical features that characterize this surface form. This section only appears after you select a form type that supports features (verb, adjective, pronoun).",
+          "guidance": "Features help categorize the surface form grammatically: Gender (masculine, feminine, neuter), Number (singular, plural), Person (1st, 2nd, 3rd), and Politeness (formal, informal). These are optional but recommended for verb and adjective forms to enable advanced search and filtering.",
+          "whenToFill": "The Features section appears automatically after selecting a form type that supports it (verb, adjective, or pronoun). For nouns or other form types, features are not available and this section will not appear.",
+          "examples": [
+            {
+              "form": "धावली",
+              "latin": "dhaavli",
+              "features": "Gender: feminine, Number: singular, Person: 3rd",
+              "note": "Past tense verb form"
+            },
+            {
+              "form": "धावतो",
+              "latin": "dhaavto",
+              "features": "Gender: masculine, Number: singular, Person: 3rd",
+              "note": "Present tense verb form"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After creating the surface form",
+          "actions": [
+            "If form type supports features, add Features to categorize the form grammatically",
+            "Add Pronunciation to help learners hear how this inflected form sounds",
+            "Verify the form appears correctly and links to the parent lemma"
+          ]
+        }
+      ]
+    }
+  ]
+}

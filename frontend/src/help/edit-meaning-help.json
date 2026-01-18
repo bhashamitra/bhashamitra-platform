@@ -1,0 +1,41 @@
+{
+  "pageId": "edit-meaning",
+  "title": "Edit Meaning",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "The language for this meaning. Common choices are English (en) or Hindi (hi). The language determines how the meaning will be displayed to learners.",
+          "guidance": "Language cannot be changed after creation. If you need a meaning in a different language, create a new meaning instead."
+        },
+        {
+          "name": "Meaning Text",
+          "description": "The definition or explanation of the lemma. This is what learners will see when they look up the word.",
+          "guidance": "Write clear, concise definitions. For nouns, describe what the thing is. For verbs, describe the action. Keep definitions practical and learner-friendly. Maximum 1024 characters."
+        },
+        {
+          "name": "Priority",
+          "description": "The display order for meanings. Lower numbers appear first. If a lemma has multiple meanings, priority determines which one is shown as primary.",
+          "guidance": "Set the most common or primary meaning to priority 1. Secondary or less common meanings can have higher priority numbers. You can reorder meanings by updating priorities."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After saving changes",
+          "actions": [
+            "Verify the meaning displays correctly in the lemma view",
+            "Check that priority ordering is correct relative to other meanings",
+            "Ensure linked Usage Sentences still match the updated meaning"
+          ]
+        }
+      ]
+    }
+  ]
+}

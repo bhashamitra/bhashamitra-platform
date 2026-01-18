@@ -5,6 +5,7 @@ import type { UsageSentenceDto } from "../../types/sentence";
 import SentenceLinksSection from "./components/SentenceLinksSection";
 import SentencePronunciationsSection from "./components/SentencePronunciationsSection";
 import { apiFetch } from "../../utils/apiClient";
+import HelpButton from "../../components/HelpButton";
 
 const REGISTER_OPTIONS = [
     { value: "formal", label: "Formal" },
@@ -195,27 +196,29 @@ export default function SentenceEditPage() {
 
     return (
         <div className="mt-2">
-            <div className="admin-page-header">
-                <div>
+            <div className="max-w-lg">
+                <div className="flex items-start justify-between mb-2">
                     <h1 className="h1">Edit Sentence</h1>
+                    <HelpButton pageId="edit-sentence" />
+                </div>
+                <div className="flex items-center gap-3 mb-6">
                     <p className="admin-page-subtitle">
                         {sentence.sentenceNative}
                     </p>
+                    <span className={`pill ${statusPillClass(sentence.status)}`}>
+                        {sentence.status ?? "DRAFT"}
+                    </span>
                 </div>
-                <span className={`pill ${statusPillClass(sentence.status)}`}>
-                    {sentence.status ?? "DRAFT"}
-                </span>
-            </div>
 
-            {error && (
-                <div className="error-message mt-3">
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
 
-            {/* Status Actions */}
-            {sentence && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                {/* Status Actions */}
+                {sentence && (
+                    <div className="mb-4 flex flex-wrap gap-2">
                     {sentence.status === "DRAFT" && (
                         <button
                             onClick={() => handleStatusChange("REVIEW")}
@@ -270,10 +273,10 @@ export default function SentenceEditPage() {
                             Unarchive
                         </button>
                     )}
-                </div>
-            )}
+                    </div>
+                )}
 
-            <form onSubmit={handleSave} className="mt-6 max-w-lg space-y-4">
+                <form onSubmit={handleSave} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                         Language *
@@ -387,6 +390,7 @@ export default function SentenceEditPage() {
                     </Link>
                 </div>
             </form>
+            </div>
 
             {/* Pronunciations Section */}
             {sentence && (

@@ -1,0 +1,41 @@
+{
+  "pageId": "edit-lemma",
+  "title": "Edit Lemma",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "The language for this lemma. This field cannot be changed after creation.",
+          "guidance": "Language is set when the lemma is first created and determines script rules, sorting behavior, and validation."
+        },
+        {
+          "name": "Native Text",
+          "description": "The lemma in its native script (e.g., Devanagari for Marathi). This is the dictionary form—the base, uninflected word.",
+          "guidance": "Use the canonical form: verbs in infinitive (धावणे), nouns in singular form (मुलगा), adjectives in base form (लाल). Do not enter inflected or conjugated forms here—those belong to Surface Forms."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After saving changes",
+          "actions": [
+            "Review and update Meanings if the lemma's definitions have changed",
+            "Update or add Usage Sentences that demonstrate correct usage",
+            "Add or update Pronunciations (audio) as needed",
+            "Manage Surface Forms for inflected variations (e.g., \"धावली\", \"धावतो\")"
+          ]
+        },
+        {
+          "step": "Status workflow",
+          "content": "Use the status buttons above the form to promote the lemma through the workflow: DRAFT → REVIEW → PUBLISHED. Once published, changes should be carefully reviewed as they affect the public dictionary."
+        }
+      ]
+    }
+  ]
+}

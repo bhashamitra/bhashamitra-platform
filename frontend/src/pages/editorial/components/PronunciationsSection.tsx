@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Trash2, Mic, MicOff, Star } from "lucide-react";
+import HelpButton from "../../../components/HelpButton";
 
 interface PronunciationDto {
     id: string;
@@ -326,7 +327,10 @@ export default function PronunciationsSection({ lemmaId, lemmaStatus }: Pronunci
 
     return (
         <div className="mt-8 border-t border-slate-200 pt-6">
-            <h2 className="section-header-alt mb-4">Pronunciations</h2>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="section-header-alt">Pronunciations</h2>
+                <HelpButton pageId="create-pronunciation-lemma" />
+            </div>
 
             {error && (
                 <div className="error-message mb-4">
@@ -410,7 +414,10 @@ export default function PronunciationsSection({ lemmaId, lemmaStatus }: Pronunci
 
             {/* Add Pronunciation Form (Always Visible) */}
             <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-                <h3 className="text-sm font-medium text-slate-700 mb-4">Add Pronunciation</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-slate-700">Add Pronunciation</h3>
+                    <HelpButton pageId="create-pronunciation-lemma" />
+                </div>
                 
                 <form ref={pronunciationFormRef} onSubmit={handleUploadPronunciation} className="space-y-4">
                     {/* Audio Input */}

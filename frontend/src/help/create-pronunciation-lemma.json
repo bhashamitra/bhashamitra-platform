@@ -1,0 +1,36 @@
+{
+  "pageId": "create-pronunciation-lemma",
+  "title": "Add Pronunciation for Lemma",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Audio",
+          "description": "Audio recording of the lemma pronunciation. Record directly or upload a file (max 1 MB).",
+          "guidance": "Keep recordings short: ≤3 seconds recommended, ≤5 seconds maximum. Pronounce the word clearly in its dictionary form."
+        },
+        {
+          "name": "Is Primary",
+          "description": "Mark this pronunciation as the primary (default) pronunciation for the lemma.",
+          "guidance": "Each lemma should have one primary pronunciation. This will be the default audio played when learners look up the word. If this is the first pronunciation, it will automatically be set as primary."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After adding the pronunciation",
+          "actions": [
+            "Test playback to ensure the audio is clear and correct",
+            "If adding multiple pronunciations, set one as primary",
+            "Add speaker and region metadata if recording variations from different voices or dialects"
+          ]
+        }
+      ]
+    }
+  ]
+}

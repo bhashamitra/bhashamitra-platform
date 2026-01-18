@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useEnabledLanguages } from "../../hooks/useEnabledLanguages";
 import { POS_OPTIONS } from "../../constants/lemma";
+import HelpButton from "../../components/HelpButton";
 
 export default function LemmaCreatePage() {
     const navigate = useNavigate();
@@ -68,22 +69,22 @@ export default function LemmaCreatePage() {
 
     return (
         <div className="mt-2">
-            <div className="admin-page-header">
-                <div>
+            <div className="max-w-lg">
+                <div className="flex items-start justify-between mb-2">
                     <h1 className="h1">Create New Lemma</h1>
-                    <p className="admin-page-subtitle">
-                        Add a new dictionary entry.
-                    </p>
+                    <HelpButton pageId="create-lemma" />
                 </div>
-            </div>
+                <p className="admin-page-subtitle mb-6">
+                    Add a new dictionary entry.
+                </p>
 
-            {error && (
-                <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
 
-            <form onSubmit={handleSubmit} className="mt-6 max-w-lg space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                         Language *
@@ -175,7 +176,8 @@ export default function LemmaCreatePage() {
                         Cancel
                     </Link>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     );
 }

@@ -1,0 +1,121 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Lemma?",
+      "content": "A lemma is the base form (dictionary form) of a word. It represents the canonical entry that all related inflections and variations connect to. For Marathi verbs, use the infinitive form (e.g., \"धावणे\" / dhaavne), not inflected forms like \"धावली\"."
+    },
+    {
+      "type": "field-guidance",
+      "title": "Field Guidance",
+      "fields": [
+        {
+          "name": "Latin Transliteration",
+          "required": false,
+          "description": "Optional transliteration using Latin characters. Helps with pronunciation and searchability.",
+          "guidance": "Use standard transliteration schemes (e.g., ISO 15919 or simplified IAST). Examples: \"नमस्कार\" → \"namaskar\", \"धावणे\" → \"dhaavne\". If unsure, you can add this later during review.",
+          "whenToFill": "Fill this if you have a standard transliteration readily available. You can skip it and add it during the review stage if needed.",
+          "examples": [
+            {
+              "native": "नमस्कार",
+              "latin": "namaskar",
+              "note": "Greeting"
+            },
+            {
+              "native": "धावणे",
+              "latin": "dhaavne",
+              "note": "To run (verb infinitive)"
+            }
+          ]
+        },
+        {
+          "name": "Part of Speech",
+          "required": false,
+          "description": "Categorize the word's grammatical function. This helps with search, categorization, and language learning features.",
+          "guidance": "Be as precise as you can, but don't overthink it. Common parts of speech: noun, verb, adjective, adverb, pronoun, preposition, conjunction, interjection. You can refine this later during review.",
+          "precision": "Early in the process, approximate categorization is fine. The main goal is to get the lemma created so you can add meanings, sentences, and pronunciations. Exact POS can be refined during review.",
+          "examples": [
+            {
+              "lemma": "मुलगा",
+              "pos": "noun",
+              "note": "Boy"
+            },
+            {
+              "lemma": "धावणे",
+              "pos": "verb",
+              "note": "To run"
+            },
+            {
+              "lemma": "लाल",
+              "pos": "adjective",
+              "note": "Red"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "required": false,
+          "description": "Internal editorial notes. These are for creators and curators only—they are not shown to learners.",
+          "guidance": "Use notes to record editorial decisions, sources, context, or reminders. Examples: \"From classical text\", \"Regional variation\", \"Needs pronunciation review\", \"Cross-reference with X lemma\".",
+          "purpose": "This field is purely for internal documentation and workflow management. It helps track decisions and context that won't appear in the public-facing dictionary."
+        }
+      ]
+    },
+    {
+      "type": "examples",
+      "title": "Examples",
+      "items": [
+        {
+          "native": "नमस्कार",
+          "latin": "namaskar",
+          "pos": "interjection",
+          "note": "Greeting - base form"
+        },
+        {
+          "native": "धावणे",
+          "latin": "dhaavne",
+          "pos": "verb",
+          "note": "To run - infinitive form, not \"धावली\" (past tense)"
+        },
+        {
+          "native": "मुलगा",
+          "latin": "mulaga",
+          "pos": "noun",
+          "note": "Boy - singular base form"
+        },
+        {
+          "native": "लाल",
+          "latin": "lal",
+          "pos": "adjective",
+          "note": "Red - base form"
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Entering inflected forms instead of base form",
+          "example": "Using \"धावली\" (ran) instead of \"धावणे\" (to run)",
+          "solution": "Always use the dictionary form. Inflected forms like past tense, plural, or conjugated verbs belong in Surface Forms, not here."
+        },
+        {
+          "mistake": "Including articles or particles",
+          "example": "Entering \"एक मुलगा\" instead of just \"मुलगा\"",
+          "solution": "The lemma should be the bare word, without articles, particles, or determiners."
+        },
+        {
+          "mistake": "Creating duplicate lemmas for different spellings",
+          "example": "Creating separate entries for \"सुंदर\" and \"सुन्दर\"",
+          "solution": "Check if a similar lemma already exists. If it's a variant spelling, consider using Surface Forms or Notes to document the variation."
+        },
+        {
+          "mistake": "Being too strict about Part of Speech",
+          "example": "Hesitating to create a lemma because POS is uncertain",
+          "solution": "You can leave POS blank or use your best guess. The priority is creating the lemma so you can add meanings, sentences, and pronunciations. POS can be refined during review."
+        }
+      ]
+    }
+  ]
+}

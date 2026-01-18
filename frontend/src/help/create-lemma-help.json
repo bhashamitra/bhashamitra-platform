@@ -1,0 +1,41 @@
+{
+  "pageId": "create-lemma",
+  "title": "Create New Lemma",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "Select the language for this lemma. The language determines script rules, sorting behavior, and validation. Once set, this cannot be changed later.",
+          "guidance": "Choose the primary language this lemma belongs to. For example, select \"Marathi\" (mr) for Marathi words."
+        },
+        {
+          "name": "Native Text",
+          "description": "Enter the lemma in its native script (e.g., Devanagari for Marathi). This is the dictionary form—the base, uninflected word.",
+          "guidance": "Use the canonical form: verbs in infinitive (धावणे), nouns in singular form (मुलगा), adjectives in base form (लाल). Do not enter inflected or conjugated forms here—those belong to Surface Forms."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After creating the lemma",
+          "actions": [
+            "Add one or more Meanings to define what the lemma means",
+            "Link Usage Sentences that demonstrate how the word is used in context",
+            "Add Pronunciations (audio) to help with pronunciation",
+            "Create Surface Forms for inflected variations (e.g., \"धावली\", \"धावतो\")"
+          ]
+        },
+        {
+          "step": "Workflow tip",
+          "content": "Start with the minimum required fields (Language + Native Text) to create the lemma. You can always come back to add transliteration, POS, and notes later. The important thing is to establish the entry so you can start building out meanings, sentences, and pronunciations."
+        }
+      ]
+    }
+  ]
+}

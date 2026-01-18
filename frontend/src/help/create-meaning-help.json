@@ -1,0 +1,41 @@
+{
+  "pageId": "create-meaning",
+  "title": "Create New Meaning",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Language",
+          "description": "Select the language for this meaning. Common choices are English (en) or Hindi (hi). The language determines how the meaning will be displayed to learners.",
+          "guidance": "Choose the language that best serves your target audience. English meanings are typically used for Marathi-English dictionaries, while Hindi meanings serve Marathi-Hindi contexts."
+        },
+        {
+          "name": "Meaning Text",
+          "description": "Enter the definition or explanation of the lemma. This is what learners will see when they look up the word.",
+          "guidance": "Write clear, concise definitions. For nouns, describe what the thing is. For verbs, describe the action. Keep definitions practical and learner-friendly. Maximum 1024 characters."
+        },
+        {
+          "name": "Priority",
+          "description": "Set the display order for meanings. Lower numbers appear first. If a lemma has multiple meanings, priority determines which one is shown as primary.",
+          "guidance": "Set the most common or primary meaning to priority 1. Secondary or less common meanings can have higher priority numbers. You can always reorder by updating priorities."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After creating the meaning",
+          "actions": [
+            "Add additional meanings in other languages if needed",
+            "Adjust priorities to control the display order",
+            "Link Usage Sentences that demonstrate this meaning in context"
+          ]
+        }
+      ]
+    }
+  ]
+}

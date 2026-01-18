@@ -1,0 +1,71 @@
+{
+  "sections": [
+    {
+      "type": "definition",
+      "title": "What is a Surface Form?",
+      "content": "A surface form is an inflected, conjugated, or otherwise modified version of a lemma. While the lemma is the base dictionary form (e.g., 'धावणे' / to run), surface forms represent how the word actually appears in use (e.g., 'धावली' / she ran, 'धावतो' / he runs). Surface forms connect to specific grammatical features like gender, number, person, and politeness."
+    },
+    {
+      "type": "field-guidance",
+      "title": "Field Guidance",
+      "fields": [
+        {
+          "name": "Latin Transliteration",
+          "required": false,
+          "description": "Optional transliteration using Latin characters. Helps with pronunciation and searchability.",
+          "guidance": "Use standard transliteration schemes (e.g., ISO 15919 or simplified IAST). If the lemma already has transliteration, follow a similar pattern for consistency.",
+          "examples": [
+            {
+              "native": "धावली",
+              "latin": "dhaavli",
+              "note": "She ran (past tense)"
+            },
+            {
+              "native": "धावतो",
+              "latin": "dhaavto",
+              "note": "He runs (present tense)"
+            },
+            {
+              "native": "जेवतो",
+              "latin": "jewato",
+              "note": "He eats"
+            },
+            {
+              "native": "जेवतोय",
+              "latin": "jewatoy",
+              "note": "He is eating"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "required": false,
+          "description": "Internal editorial notes. These are for creators and curators only—they are not shown to learners.",
+          "guidance": "Use notes to record editorial decisions, regional variations, or context. Examples: \"Used in Mumbai dialect\", \"Archaic form\", \"Cross-reference with X lemma\".",
+          "purpose": "This field is purely for internal documentation and workflow management."
+        }
+      ]
+    },
+    {
+      "type": "common-mistakes",
+      "title": "Common Mistakes",
+      "items": [
+        {
+          "mistake": "Using lemma form as surface form",
+          "example": "Entering 'धावणे' (infinitive) as a surface form",
+          "solution": "Surface forms should be inflected/conjugated. Use the actual form as it appears in text (e.g., 'धावली' for past tense, 'धावतो' for present tense)."
+        },
+        {
+          "mistake": "Not setting form type correctly",
+          "example": "Creating a verb surface form but selecting 'noun' as form type",
+          "solution": "Form type must match the grammatical category. Verb inflections → verb type, noun variations → noun type."
+        },
+        {
+          "mistake": "Creating duplicate surface forms",
+          "example": "Creating 'धावली' twice with same features",
+          "solution": "Check if a similar surface form already exists. Each unique combination of form text and features should exist only once."
+        }
+      ]
+    }
+  ]
+}

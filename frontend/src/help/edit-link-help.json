@@ -1,0 +1,31 @@
+{
+  "pageId": "edit-link",
+  "title": "Edit Link",
+  "sections": [
+    {
+      "type": "required-fields",
+      "title": "Required Fields",
+      "fields": [
+        {
+          "name": "Lemma",
+          "description": "The lemma this sentence is linked to. You can change this to link the sentence to a different lemma.",
+          "guidance": "If changing the lemma, ensure the new lemma's language matches the sentence language. Changing the lemma will clear any selected Meaning or Surface Form—you'll need to reselect them if needed."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "title": "Next Steps",
+      "items": [
+        {
+          "step": "After saving changes",
+          "actions": [
+            "Verify the updated link still accurately represents the sentence-lemma relationship",
+            "Review and update Meaning or Surface Form selections if the lemma changed",
+            "Check that the link type still correctly categorizes the relationship"
+          ]
+        }
+      ]
+    }
+  ]
+}

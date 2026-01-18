@@ -6,6 +6,7 @@ import type { LemmaDto } from "../../types/lemma";
 import MeaningsSection from "./components/MeaningsSection";
 import SurfaceFormsSection from "./components/SurfaceFormsSection";
 import PronunciationsSection from "./components/PronunciationsSection";
+import HelpButton from "../../components/HelpButton";
 
 export default function LemmaEditPage() {
     const { id } = useParams<{ id: string }>();
@@ -185,26 +186,28 @@ export default function LemmaEditPage() {
 
     return (
         <div className="mt-2">
-            <div className="admin-page-header">
-                <div>
+            <div className="max-w-lg">
+                <div className="flex items-start justify-between mb-2">
                     <h1 className="h1">Edit Lemma</h1>
+                    <HelpButton pageId="edit-lemma" />
+                </div>
+                <div className="flex items-center gap-3 mb-6">
                     <p className="admin-page-subtitle">
                         {lemma.lemmaNative} {lemma.lemmaLatin ? `(${lemma.lemmaLatin})` : ""}
                     </p>
+                    <span className={`pill ${statusPillClass(lemma.status)}`}>
+                        {lemma.status ?? "DRAFT"}
+                    </span>
                 </div>
-                <span className={`pill ${statusPillClass(lemma.status)}`}>
-                    {lemma.status ?? "DRAFT"}
-                </span>
-            </div>
 
             {error && (
-                <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                     {error}
                 </div>
             )}
 
             {/* Status Actions */}
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-wrap gap-2">
                 {lemma.status === "DRAFT" && (
                     <button
                         onClick={() => handleStatusChange("REVIEW")}
@@ -262,7 +265,7 @@ export default function LemmaEditPage() {
             </div>
 
             {/* Edit Form */}
-            <form onSubmit={handleSave} className="mt-6 max-w-lg space-y-4">
+            <form onSubmit={handleSave} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                         Language
@@ -357,6 +360,7 @@ export default function LemmaEditPage() {
                     </div>
                 </div>
             )}
+            </div>
 
             {/* Pronunciations */}
             <PronunciationsSection lemmaId={id!} lemmaStatus={lemma.status} />

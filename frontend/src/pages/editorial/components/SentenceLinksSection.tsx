@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Trash2, Pencil, Plus, X } from "lucide-react";
 import type { LemmaSentenceLinkDto } from "../../../types/sentence";
 import { apiFetch } from "../../../utils/apiClient";
+import HelpButton from "../../../components/HelpButton";
 
 interface SentenceLinksSectionProps {
     sentenceId: string;
@@ -480,10 +481,10 @@ export default function SentenceLinksSection({ sentenceId, sentenceStatus }: Sen
                 <button
                     type="button"
                     onClick={openCreateModal}
-                    className="admin-btn admin-btn-primary"
+                    className="admin-btn admin-btn-primary flex items-center gap-1 whitespace-nowrap"
                 >
-                    <Plus size={16} className="mr-1" />
-                    Add Link
+                    <Plus size={16} />
+                    <span>Add Link</span>
                 </button>
             </div>
 
@@ -552,14 +553,17 @@ export default function SentenceLinksSection({ sentenceId, sentenceStatus }: Sen
                                 <h3 className="modal-title">
                                     {editingLink ? "Edit Link" : "Add Link"}
                                 </h3>
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="modal-close-btn"
-                                    aria-label="Close"
-                                >
-                                    <X size={20} />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <HelpButton pageId={editingLink ? "edit-link" : "create-link"} />
+                                    <button
+                                        type="button"
+                                        onClick={closeModal}
+                                        className="modal-close-btn"
+                                        aria-label="Close"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
                             </div>
 
                             {error && (
