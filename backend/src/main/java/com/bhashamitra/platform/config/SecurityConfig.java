@@ -41,10 +41,13 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(oidcUserServiceWithCognitoGroups())
                         )
+                        // After successful login, redirect to home page
+                        .defaultSuccessUrl("/", true)
                 )
 
                 // Return 401 for API requests instead of redirecting to OAuth login
                 // This allows the frontend to handle session expiration gracefully
+                // For permitted routes (like /), Spring Security won't redirect since they're permitAll()
                 .exceptionHandling(exceptions -> exceptions
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),

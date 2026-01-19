@@ -40,7 +40,18 @@ export async function apiFetch(
     });
 
     // Handle 401 Unauthorized globally
+    // Only redirect to login if we're NOT on a public page (like landing page)
     if (response.status === 401 && !isRedirectingToLogin) {
+        const currentPath = window.location.pathname;
+        const isPublicPage = currentPath === "/" || currentPath === "/privacy";
+        
+        // On public pages, don't redirect - let the component handle the 401 gracefully
+        // Users can manually navigate to /oauth2/authorization/cognito if they want to login
+        if (isPublicPage) {
+            return response; // Return the 401 response without redirecting
+        }
+        
+        // For protected pages, redirect to login
         isRedirectingToLogin = true;
         
         // Redirect to Spring Security's OAuth2 authorization endpoint
