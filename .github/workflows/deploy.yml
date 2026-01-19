@@ -3,8 +3,13 @@ name: Deploy to ECS Fargate
 on:
   workflow_dispatch:  # Manual trigger
     inputs:
+      ref:
+        description: 'Branch or tag to deploy from (e.g., main, develop, feature-branch)'
+        required: false
+        type: string
+        default: 'main'
       image_tag:
-        description: 'Docker image tag (default: commit SHA)'
+        description: 'Docker image tag (default: commit SHA from selected branch)'
         required: false
         type: string
 
@@ -27,6 +32,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || 'main' }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

@@ -1,6 +1,5 @@
 package com.bhashamitra.platform.controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -17,9 +16,15 @@ public class MeController {
     @GetMapping("/api/me")
     public ResponseEntity<Map<String, Object>> me(Authentication auth) {
 
-        // If not authenticated (or not an OAuth2 user), return 401 instead of throwing NPE/ClassCastException
+        // If not authenticated (or not an OAuth2 user), return 200 OK with empty data
+        // This prevents Spring Security from redirecting to OAuth2 login on public pages
+        // The frontend will handle this gracefully by treating it as "not logged in"
         if (auth == null || !(auth.getPrincipal() instanceof OAuth2User user)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            Map<String, Object> empty = new LinkedHashMap<>();
+            empty.put("email", null);
+            empty.put("username", null);
+            empty.put("groups", List.of());
+            return ResponseEntity.ok(empty);
         }
 
         Map<String, Object> out = new LinkedHashMap<>();

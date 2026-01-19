@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/me").permitAll() // Allow unauthenticated access - returns empty data if not logged in
                         .requestMatchers("/api/admin/**").hasAnyRole("admin", "editor")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
@@ -41,14 +42,35 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(oidcUserServiceWithCognitoGroups())
                         )
+                        // After successful login, redirect to home page
+                        .defaultSuccessUrl("/", true)
                 )
 
-                // Return 401 for API requests instead of redirecting to OAuth login
-                // This allows the frontend to handle session expiration gracefully
+                // Configure exception handling to prevent auto-redirects to OAuth2 login
+                // CRITICAL: Spring Security with OAuth2 login will automatically redirect
+                // unauthenticated users to OAuth2 provider. We need to prevent this for:
+                // 1. API requests - return 401 instead of redirect
+                // 2. Public routes - allow through without authentication
                 .exceptionHandling(exceptions -> exceptions
+                        // For API requests (except /api/me which is permitAll), return 401 instead of redirecting to OAuth login
+                        // This MUST be configured BEFORE the default entry point to take precedence
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                (request) -> request.getRequestURI().startsWith("/api/")
+                                (request) -> {
+                                    String uri = request.getRequestURI();
+                                    // Exclude /api/me since it's permitAll() and should return 200 OK with empty data
+                                    return uri.startsWith("/api/") && !uri.equals("/api/me");
+                                }
+                        )
+                        // For all other requests (including /, /index.html, etc.),
+                        // they are permitAll() so they should NOT trigger authentication
+                        // Return OK to allow the request through without any redirect
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.OK),
+                                (request) -> {
+                                    String uri = request.getRequestURI();
+                                    return !uri.startsWith("/api/") && !uri.startsWith("/oauth2/");
+                                }
                         )
                 )
 
