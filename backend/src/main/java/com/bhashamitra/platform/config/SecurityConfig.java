@@ -46,22 +46,29 @@ public class SecurityConfig {
                 )
 
                 // Configure exception handling to prevent auto-redirects to OAuth2 login
-                // The key is to return 401 for APIs and allow public routes without redirecting
-                // Spring Security will NOT redirect for permitAll() routes by default, but we explicitly
-                // configure entry points to ensure no redirects happen for public pages
+                // CRITICAL: Spring Security with OAuth2 login will automatically redirect
+                // unauthenticated users to OAuth2 provider. We need to prevent this for:
+                // 1. API requests - return 401 instead of redirect
+                // 2. Public routes - allow through without authentication
                 .exceptionHandling(exceptions -> exceptions
                         // For API requests, return 401 instead of redirecting to OAuth login
+                        // This MUST be configured BEFORE the default entry point to take precedence
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                (request) -> request.getRequestURI().startsWith("/api/")
+                                (request) -> {
+                                    String uri = request.getRequestURI();
+                                    return uri.startsWith("/api/");
+                                }
                         )
-                        // For all other requests (including /, /index.html, etc.), 
-                        // don't redirect - they're already permitAll() so they should be accessible
-                        // Return OK status to allow the request through without authentication
+                        // For all other requests (including /, /index.html, etc.),
+                        // they are permitAll() so they should NOT trigger authentication
+                        // Return OK to allow the request through without any redirect
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.OK),
-                                (request) -> !request.getRequestURI().startsWith("/api/")
-                                        && !request.getRequestURI().startsWith("/oauth2/")
+                                (request) -> {
+                                    String uri = request.getRequestURI();
+                                    return !uri.startsWith("/api/") && !uri.startsWith("/oauth2/");
+                                }
                         )
                 )
 
