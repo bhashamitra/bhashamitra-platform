@@ -52,13 +52,14 @@ public class SecurityConfig {
                 // 1. API requests - return 401 instead of redirect
                 // 2. Public routes - allow through without authentication
                 .exceptionHandling(exceptions -> exceptions
-                        // For API requests, return 401 instead of redirecting to OAuth login
+                        // For API requests (except /api/me which is permitAll), return 401 instead of redirecting to OAuth login
                         // This MUST be configured BEFORE the default entry point to take precedence
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                 (request) -> {
                                     String uri = request.getRequestURI();
-                                    return uri.startsWith("/api/");
+                                    // Exclude /api/me since it's permitAll() and should return 200 OK with empty data
+                                    return uri.startsWith("/api/") && !uri.equals("/api/me");
                                 }
                         )
                         // For all other requests (including /, /index.html, etc.),
