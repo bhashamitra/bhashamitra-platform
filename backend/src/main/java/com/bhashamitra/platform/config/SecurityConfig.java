@@ -45,13 +45,23 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true)
                 )
 
-                // Return 401 for API requests instead of redirecting to OAuth login
-                // This allows the frontend to handle session expiration gracefully
-                // For permitted routes (like /), Spring Security won't redirect since they're permitAll()
+                // Configure exception handling to prevent auto-redirects to OAuth2 login
+                // The key is to return 401 for APIs and allow public routes without redirecting
+                // Spring Security will NOT redirect for permitAll() routes by default, but we explicitly
+                // configure entry points to ensure no redirects happen for public pages
                 .exceptionHandling(exceptions -> exceptions
+                        // For API requests, return 401 instead of redirecting to OAuth login
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                 (request) -> request.getRequestURI().startsWith("/api/")
+                        )
+                        // For all other requests (including /, /index.html, etc.), 
+                        // don't redirect - they're already permitAll() so they should be accessible
+                        // Return OK status to allow the request through without authentication
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.OK),
+                                (request) -> !request.getRequestURI().startsWith("/api/")
+                                        && !request.getRequestURI().startsWith("/oauth2/")
                         )
                 )
 
