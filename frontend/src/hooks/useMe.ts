@@ -27,7 +27,12 @@ export function useMe() {
                 }
 
                 const data = (await res.json()) as MeResponse;
-                setMe(data);
+                // If all fields are null/empty, treat as not logged in
+                if (!data.email && !data.username && (!data.groups || data.groups.length === 0)) {
+                    setMe(null);
+                } else {
+                    setMe(data);
+                }
             } catch (err) {
                 if ((err as any)?.name !== "AbortError") {
                     setMe(null);

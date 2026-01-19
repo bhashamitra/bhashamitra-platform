@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/me").permitAll() // Allow unauthenticated access - returns empty data if not logged in
                         .requestMatchers("/api/admin/**").hasAnyRole("admin", "editor")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
