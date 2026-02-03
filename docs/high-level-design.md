@@ -70,111 +70,111 @@ The application uses a **monolithic deployment** with **embedded frontend** appr
 └─────────────────────────────────┬───────────────────────────────────────────────┘
                                   │
 ┌─────────────────────────────────┴───────────────────────────────────────────────┐
-│                            Route 53 DNS                                        │
-│  ┌─────────────────────┐    ┌─────────────────────┐                           │
-│  │ bhashamitra.com     │    │ auth.bhashamitra.com│                           │
-│  │ www.bhashamitra.com │    │                     │                           │
-│  └─────────────────────┘    └─────────────────────┘                           │
+│                            Route 53 DNS                                         │
+│  ┌─────────────────────┐    ┌─────────────────────┐                             │
+│  │ bhashamitra.com     │    │ auth.bhashamitra.com│                             │
+│  │ www.bhashamitra.com │    │                     │                             │
+│  └─────────────────────┘    └─────────────────────┘                             │
 └─────────────┬───────────────────────┬───────────────────────────────────────────┘
               │                       │
               │                       │
 ┌─────────────▼───────────────────────┐ ┌─────────▼─────────────────────────────────┐
 │        Application Load             │ │         AWS Cognito                       │
-│         Balancer (ALB)              │ │      User Pool + Hosted UI               │
+│         Balancer (ALB)              │ │      User Pool + Hosted UI                │
 │                                     │ │                                           │
 │  • SSL Termination                  │ │  • Email-based Authentication             │
-│  • HTTPS-only (443)                 │ │  • Custom Domain (auth.bhashamitra.com)  │
-│  • HTTP→HTTPS Redirect              │ │  • User Groups: learner, editor, admin   │
-│  • www→non-www Redirect             │ │  • OAuth2 Integration                    │
+│  • HTTPS-only (443)                 │ │  • Custom Domain (auth.bhashamitra.com)   │
+│  • HTTP→HTTPS Redirect              │ │  • User Groups: learner, editor, admin    │
+│  • www→non-www Redirect             │ │  • OAuth2 Integration                     │
 └─────────────┬───────────────────────┘ └───────────────────────────────────────────┘
               │
               │
 ┌─────────────▼───────────────────────────────────────────────────────────────────┐
-│                              ECS Fargate Cluster                               │
+│                              ECS Fargate Cluster                                │
 │                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                    Spring Boot Application                              │   │
-│  │                                                                         │   │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐ │   │
-│  │  │   Controllers   │  │   Security      │  │    Static Resources     │ │   │
-│  │  │                 │  │   Config        │  │                         │ │   │
-│  │  │ • /api/me       │  │                 │  │ • React SPA             │ │   │
-│  │  │ • /api/version  │  │ • OAuth2 Login  │  │ • Vite + TypeScript     │ │   │
-│  │  │                 │  │ • CSRF Config   │  │ • Tailwind CSS          │ │   │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘ │   │
-│  │                                                                         │   │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐ │   │
-│  │  │   Data Layer    │  │   Liquibase     │  │    Health Checks        │ │   │
-│  │  │                 │  │   Migrations    │  │                         │ │   │
-│  │  │ • Spring Data   │  │                 │  │ • /actuator/health/     │ │   │
-│  │  │   JPA           │  │ • Schema Mgmt   │  │   liveness              │ │   │
-│  │  │ • MySQL Driver  │  │ • Version Ctrl  │  │ • Container Health      │ │   │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘ │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                    Spring Boot Application                              │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │    │
+│  │  │   Controllers   │  │   Security      │  │    Static Resources     │  │    │
+│  │  │                 │  │   Config        │  │                         │  │    │
+│  │  │ • /api/me       │  │                 │  │ • React SPA             │  │    │
+│  │  │ • /api/version  │  │ • OAuth2 Login  │  │ • Vite + TypeScript     │  │    │
+│  │  │                 │  │ • CSRF Config   │  │ • Tailwind CSS          │  │    │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │    │
+│  │  │   Data Layer    │  │   Liquibase     │  │    Health Checks        │  │    │
+│  │  │                 │  │   Migrations    │  │                         │  │    │
+│  │  │ • Spring Data   │  │                 │  │ • /actuator/health/     │  │    │
+│  │  │   JPA           │  │ • Schema Mgmt   │  │   liveness              │  │    │
+│  │  │ • MySQL Driver  │  │ • Version Ctrl  │  │ • Container Health      │  │    │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                 │
-│  • CPU: 0.25 vCPU                                                              │
-│  • Memory: 512 MB                                                              │
-│  • Auto-scaling capable                                                        │
-│  • Container Insights enabled                                                  │
+│  • CPU: 0.25 vCPU                                                               │
+│  • Memory: 512 MB                                                               │
+│  • Auto-scaling capable                                                         │
+│  • Container Insights enabled                                                   │
 └─────────────────────────┬───────────────────────────────────────────────────────┘
                           │
                           │
 ┌─────────────────────────▼───────────────────────────────────────────────────────┐
-│                        Aurora Serverless v2 MySQL                             │
+│                        Aurora Serverless v2 MySQL                               │
 │                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                     Linguistic Database Schema                          │   │
-│  │                                                                         │   │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐ │   │
-│  │  │   languages     │  │     lemmas      │  │      meanings           │ │   │
-│  │  │                 │  │                 │  │                         │ │   │
-│  │  │ • code (PK)     │  │ • id (PK)       │  │ • id (PK)               │ │   │
-│  │  │ • name          │  │ • language (FK) │  │ • lemma_id (FK)         │ │   │
-│  │  │ • script        │  │ • lemma_native  │  │ • meaning_language      │ │   │
-│  │  │ • enabled       │  │ • lemma_latin   │  │ • meaning_text          │ │   │
-│  │  │                 │  │ • pos, status   │  │ • priority              │ │   │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘ │   │
-│  │                                                                         │   │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐ │   │
-│  │  │ surface_forms   │  │ usage_sentences │  │ lemma_sentence_links    │ │   │
-│  │  │                 │  │                 │  │                         │ │   │
-│  │  │ • id (PK)       │  │ • id (PK)       │  │ • id (PK)               │ │   │
-│  │  │ • lemma_id (FK) │  │ • language (FK) │  │ • lemma_id (FK)         │ │   │
-│  │  │ • form_native   │  │ • sentence_native│ │ • sentence_id (FK)      │ │   │
-│  │  │ • form_latin    │  │ • sentence_latin│  │ • surface_form_id (FK)  │ │   │
-│  │  │ • form_type     │  │ • translation   │  │ • link_type             │ │   │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘ │   │
-│  │                                                                         │   │
-│  │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│  │  │                    pronunciations                               │   │   │
-│  │  │                                                                 │   │   │
-│  │  │ • id (PK)                                                       │   │   │
-│  │  │ • owner_type (lemma/surface_form/sentence)                      │   │   │
-│  │  │ • owner_id (polymorphic FK)                                     │   │   │
-│  │  │ • speaker, region, audio_uri, duration_ms                      │   │   │
-│  │  └─────────────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                     Linguistic Database Schema                          │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │    │
+│  │  │   languages     │  │     lemmas      │  │      meanings           │  │    │
+│  │  │                 │  │                 │  │                         │  │    │
+│  │  │ • code (PK)     │  │ • id (PK)       │  │ • id (PK)               │  │    │
+│  │  │ • name          │  │ • language (FK) │  │ • lemma_id (FK)         │  │    │
+│  │  │ • script        │  │ • lemma_native  │  │ • meaning_language      │  │    │
+│  │  │ • enabled       │  │ • lemma_latin   │  │ • meaning_text          │  │    │
+│  │  │                 │  │ • pos, status   │  │ • priority              │  │    │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │    │
+│  │  │ surface_forms   │  │ usage_sentences │  │ lemma_sentence_links    │  │    │
+│  │  │                 │  │                 │  │                         │  │    │
+│  │  │ • id (PK)       │  │ • id (PK)       │  │ • id (PK)               │  │    │
+│  │  │ • lemma_id (FK) │  │ • language (FK) │  │ • lemma_id (FK)         │  │    │
+│  │  │ • form_native   │  │ • sentence_native│ │ • sentence_id (FK)      │  │    │
+│  │  │ • form_latin    │  │ • sentence_latin│  │ • surface_form_id (FK)  │  │    │
+│  │  │ • form_type     │  │ • translation   │  │ • link_type             │  │    │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────────────────────────────────────────────────────┐    │    │
+│  │  │                    pronunciations                               │    │    │
+│  │  │                                                                 │    │    │
+│  │  │ • id (PK)                                                       │    │    │
+│  │  │ • owner_type (lemma/surface_form/sentence)                      │    │    │
+│  │  │ • owner_id (polymorphic FK)                                     │    │    │
+│  │  │ • speaker, region, audio_uri, duration_ms                       │    │    │
+│  │  └─────────────────────────────────────────────────────────────────┘    │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                 │
-│  • Engine: Aurora MySQL 8.0                                                    │
-│  • Scaling: 0.5-2.0 ACUs (Auto-scaling)                                       │
-│  • Character Set: utf8mb4 (Indian language support)                           │
-│  • Multi-AZ deployment with 7 interconnected tables                           │
-│  • Comprehensive indexing for linguistic queries                              │
-│  • Status-based content workflow (DRAFT → REVIEW → PUBLISHED)                 │
+│  • Engine: Aurora MySQL 8.0                                                     │
+│  • Scaling: 0.5-2.0 ACUs (Auto-scaling)                                         │
+│  • Character Set: utf8mb4 (Indian language support)                             │
+│  • Multi-AZ deployment with 7 interconnected tables                             │
+│  • Comprehensive indexing for linguistic queries                                │
+│  • Status-based content workflow (DRAFT → REVIEW → PUBLISHED)                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            Supporting Services                                  │
 │                                                                                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────────┐ │
-│  │ AWS Secrets     │  │ CloudWatch      │  │ GitHub Actions CI/CD           │ │
-│  │ Manager         │  │ Logs            │  │                                 │ │
-│  │                 │  │                 │  │ • OIDC Authentication           │ │
-│  │ • DB Credentials│  │ • Application   │  │ • ECR Image Push                │ │
-│  │ • Auto-rotation │  │   Logs          │  │ • ECS Deployment                │ │
-│  │ • Encryption    │  │ • 7-day         │  │ • Zero-downtime Updates         │ │
-│  │                 │  │   Retention     │  │                                 │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────────────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────────┐  │
+│  │ AWS Secrets     │  │ CloudWatch      │  │ GitHub Actions CI/CD            │  │
+│  │ Manager         │  │ Logs            │  │                                 │  │
+│  │                 │  │                 │  │ • OIDC Authentication           │  │
+│  │ • DB Credentials│  │ • Application   │  │ • ECR Image Push                │  │
+│  │ • Auto-rotation │  │   Logs          │  │ • ECS Deployment                │  │
+│  │ • Encryption    │  │ • 7-day         │  │ • Zero-downtime Updates         │  │
+│  │                 │  │   Retention     │  │                                 │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -417,12 +417,12 @@ sequenceDiagram
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                           GitHub Repository                                     │
-│                     bhashamitra/bhashamitra-platform                           │
+│                     bhashamitra/bhashamitra-platform                            │
 └─────────────────────────────┬───────────────────────────────────────────────────┘
                               │ Push to main / Manual trigger
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         GitHub Actions Workflow                                │
+│                         GitHub Actions Workflow                                 │
 │                                                                                 │
 │  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────────┐  │
 │  │   Build Stage       │  │   Docker Stage      │  │   Deploy Stage          │  │
@@ -434,57 +434,57 @@ sequenceDiagram
 │  └─────────────────────┘  └─────────────────────┘  └─────────────────────────┘  │
 │                                                                                 │
 │  Security Features:                                                             │
-│  • OIDC authentication (no access keys)                                        │
-│  • Least privilege IAM roles                                                   │
-│  • Multi-architecture builds (linux/amd64)                                     │
-│  • Immutable ECR tags                                                          │
+│  • OIDC authentication (no access keys)                                         │
+│  • Least privilege IAM roles                                                    │
+│  • Multi-architecture builds (linux/amd64)                                      │
+│  • Immutable ECR tags                                                           │
 └─────────────────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              AWS ECS                                           │
+│                              AWS ECS                                            │
 │                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                    Deployment Process                                   │   │
-│  │                                                                         │   │
-│  │  1. ECS receives new task definition                                    │   │
-│  │  2. Rolling deployment starts (50% min, 200% max)                      │   │
-│  │  3. New tasks start with health checks                                 │   │
-│  │  4. ALB health checks validate endpoints                               │   │
-│  │  5. Old tasks gracefully terminated                                    │   │
-│  │  6. Service reaches desired state                                      │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                    Deployment Process                                   │    │
+│  │                                                                         │    │
+│  │  1. ECS receives new task definition                                    │    │
+│  │  2. Rolling deployment starts (50% min, 200% max)                       │    │
+│  │  3. New tasks start with health checks                                  │    │
+│  │  4. ALB health checks validate endpoints                                │    │
+│  │  5. Old tasks gracefully terminated                                     │    │
+│  │  6. Service reaches desired state                                       │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 Build Process Details:
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            Docker Multi-Stage Build                            │
+│                            Docker Multi-Stage Build                             │
 │                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        Build Stage                                      │   │
-│  │                                                                         │   │
-│  │  FROM maven:3.9.9-eclipse-temurin-21                                   │   │
-│  │                                                                         │   │
-│  │  1. Copy source code                                                    │   │
-│  │  2. Maven build (includes frontend via plugin):                        │   │
-│  │     • Install Node.js 20.19.6 + npm 10.8.2                            │   │
-│  │     • npm ci (install dependencies)                                     │   │
-│  │     • npm run build (Vite build)                                        │   │
-│  │     • Copy frontend dist/ to backend/resources/static/                 │   │
-│  │     • Maven compile and package Spring Boot JAR                        │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                           │
-│                                    ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                       Runtime Stage                                     │   │
-│  │                                                                         │   │
-│  │  FROM eclipse-temurin:21-jre                                            │   │
-│  │                                                                         │   │
-│  │  1. Copy JAR from build stage                                           │   │
-│  │  2. Set JVM options for containers                                      │   │
-│  │  3. Expose port 8080                                                    │   │
-│  │  4. Configure health checks                                             │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                        Build Stage                                      │    │
+│  │                                                                         │    │
+│  │  FROM maven:3.9.9-eclipse-temurin-21                                    │    │
+│  │                                                                         │    │
+│  │  1. Copy source code                                                    │    │
+│  │  2. Maven build (includes frontend via plugin):                         │    │
+│  │     • Install Node.js 20.19.6 + npm 10.8.2                              │    │
+│  │     • npm ci (install dependencies)                                     │    │
+│  │     • npm run build (Vite build)                                        │    │
+│  │     • Copy frontend dist/ to backend/resources/static/                  │    │
+│  │     • Maven compile and package Spring Boot JAR                         │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                            │
+│                                    ▼                                            │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                       Runtime Stage                                     │    │
+│  │                                                                         │    │
+│  │  FROM eclipse-temurin:21-jre                                            │    │
+│  │                                                                         │    │
+│  │  1. Copy JAR from build stage                                           │    │
+│  │  2. Set JVM options for containers                                      │    │
+│  │  3. Expose port 8080                                                    │    │
+│  │  4. Configure health checks                                             │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
